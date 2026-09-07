@@ -46,6 +46,14 @@ function emptyStateTemplate() {
 // PASSO 2 — implemente renderMedicationList(medications, container)
 //   vazio -> emptyStateTemplate(); senão -> map + join('') com medicationCardTemplate
 // ============================================================
+export function renderMedicationList(medications, container){
+  if(medications.length === 0){
+    container.innerHTML = emptyStateTemplate();
+    return;
+  }
+
+  container.innerHTML = medications.map(medicationCardTemplate).join('');
+}
 
 
 export function renderCounter(count, container) {

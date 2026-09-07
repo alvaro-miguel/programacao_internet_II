@@ -5,9 +5,9 @@
  * evento -> ação -> estado -> render -> tela. Sempre nesse sentido.
  * ============================================================
  */
-import {} from "./api.js";
-import { subscribe, getState } from "./state.js";
-import { renderCounter, renderLoading, renderError } from "./render.js";
+import {listMedications} from "./api.js";
+import { subscribe, getState, setMedications, setError } from "./state.js";
+import { renderCounter, renderLoading, renderError, renderMedicationList } from "./render.js";
 
 const medicationListElement = document.querySelector("#medication-list");
 const resultCounterElement = document.querySelector("#result-counter");
@@ -36,6 +36,7 @@ function renderApp(state) {
   }
 
   // PASSO 2: chame renderMedicationList aqui
+  renderMedicationList(state.medications, medicationListElement);
   // PASSO 4: chame renderDetail(state, detailPanelElement) aqui
 
   renderCounter(state.medications.length, resultCounterElement);
@@ -43,19 +44,17 @@ function renderApp(state) {
 
 subscribe(renderApp);
 
-// ============================================================
-// PASSO 2 — carga inicial
-//   async function start() {
-//     renderApp(getState());
-//     try {
-//       const medications = await listMedications();
-//       setMedications(medications);
-//     } catch (error) {
-//       setError(error.message);
-//     }
-//   }
-//   start();
-// ============================================================
+
+   async function start() {
+     renderApp(getState());
+     try {
+       const medications = await listMedications();
+       setMedications(medications);
+     } catch (error) {
+       setError(error.message);
+     }
+   }
+   start();
 
 
 // ============================================================

@@ -14,6 +14,18 @@ const MEDICATIONS_URL = "/api/medications";
 //   const response = await fetch(MEDICATIONS_URL);
 //   if (!response.ok) throw new Error(...)
 //   return response.json();
+
+export async function listMedications() {
+    const response = await fetch(MEDICATIONS_URL);
+
+    if(!response.ok){
+        throw new Error( `Não foi possível carregar (HTTP ${response.status})`
+    );
+  }
+
+  return response.json();
+
+}
 // ============================================================
 
 
