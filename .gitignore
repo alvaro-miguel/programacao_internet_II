@@ -6,3 +6,4 @@ database/*.db-journal
 atividades_arquivos
 database/prontuario.db
 01-projeto-base/database/prontuario.db
+__MACOSX/
