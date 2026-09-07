@@ -55,6 +55,18 @@ export async function createMedication(medication) {
 //   fetch(`${MEDICATIONS_URL}/${id}`)
 //   response.status === 404 -> throw new Error("Prescrição não encontrada.")
 // ============================================================
+export async function getMedication(id) {
+    const response = await fetch(`${MEDICATIONS_URL}/${id}`);
+
+    if(response.status === 404){
+        throw new Error("Prescrição não encontrada.");
+    }
+    if(!response.ok){
+        throw new Error("Falha ao buscar a prescrição.");
+    }
+
+    return response.json();
+}
 
 
 // ============================================================

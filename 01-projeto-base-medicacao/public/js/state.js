@@ -76,6 +76,16 @@ export function addMedication(medication){
 //   selectMedication: guarda o id, zera erro de detalhe, notify()
 //   clearSelection: volta selectedId para null, notify()
 // ============================================================
+export function selectMedication(id){
+  state.selectedId = id;
+  state.detailErrorMessage = null;
+  notify();
+}
+
+export function clearSelection(){
+  state.selectedId = null;
+  notify();
+}
 
 
 /** Registra uma falha ao buscar o detalhe. */

@@ -5,9 +5,9 @@
  * evento -> ação -> estado -> render -> tela. Sempre nesse sentido.
  * ============================================================
  */
-import {listMedications, createMedication} from "./api.js";
-import { subscribe, getState, setMedications, setError, addMedication } from "./state.js";
-import { renderCounter, renderLoading, renderError, renderMedicationList } from "./render.js";
+import {listMedications, createMedication, getMedication} from "./api.js";
+import { subscribe, getState, setMedications, setError, addMedication, selectMedication, setDetailError, clearSelection } from "./state.js";
+import { renderCounter, renderLoading, renderError, renderMedicationList, renderDetail } from "./render.js";
 
 const medicationListElement = document.querySelector("#medication-list");
 const resultCounterElement = document.querySelector("#result-counter");
@@ -40,6 +40,7 @@ function renderApp(state) {
   // PASSO 4: chame renderDetail(state, detailPanelElement) aqui
 
   renderCounter(state.medications.length, resultCounterElement);
+  renderDetail(state, detailPanelElement);
 }
 
 subscribe(renderApp);
@@ -103,6 +104,30 @@ saveButton.addEventListener('click', async () => {
 //   event.target.closest('[data-medication-id]') -> selectMedication(id)
 //   -> buscar o detalhe com getMedication(id) -> tratar 404
 // ============================================================
+medicationListElement.addEventListener('click', (event) => {
+  const card = event.target.closest('.medication-card');
+
+  if(card){
+    const id = Number(card.dataset.medicationId);
+    openDetail(id);
+  }
+});
+
+async function openDetail(id) {
+  selectMedication(id);
+
+  try{
+    await getMedication(id);
+  } catch (error){
+    setDetailError(error.message);
+  }
+}
+
+detailPanelElement.addEventListener('click', (event) => {
+  if(event.target.id === 'close-detail-button'){
+    clearSelection();
+  }
+});
 
 
 // ============================================================

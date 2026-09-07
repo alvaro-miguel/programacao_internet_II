@@ -89,6 +89,18 @@ app.post('/api/medications', (request, response) => {
 //   undefined -> 404
 // ============================================================
 
+app.get('/api/medications/:id', (request, response) => {
+  const id = request.params.id;
+
+  const row = db.prepare("SELECT * FROM medication_orders WHERE id=?").get(id);
+
+  if(!row){
+    return response.status(404).json({ error: 'Prescrição não encontrada.' });
+  }
+
+  return response.status(200).json(snakeToCamel(row));
+});
+
 // ============================================================
 // PASSO 5 — DELETE /api/medications/:id
 //   db.prepare("DELETE FROM medication_orders WHERE id = ?").run(id)

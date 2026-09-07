@@ -75,3 +75,34 @@ export function renderError(message, container) {
 //   observações (se houver) e um botão <button id="remove-button">Suspender</button>
 //   dica: veja o padrão renderDetail do Mini-Prontuário (gabarito da Atividade 01)
 // ============================================================
+export function renderDetail(state, container){
+  const med = state.selectedMedication;
+
+  if(!med){
+    container.hidden = true;
+    container.innerHTML = "";
+    return;
+  }
+
+  container.hidden = false;
+
+  if(state.detailErrorMessage){
+    container.innerHTML = `<div class="alert alert-danger">${escapeHtml(state.detailErrorMessage)}</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="d-flex justify-content-between align-items-start mb-4">
+      <h3 class="m-0 fs-5">${escapeHtml(med.medicationName)}</h3>
+      <button id="close-detail-button" class="btn-close" aria-label="Fechar"></button>
+    </div>
+    <p><strong>Paciente:</strong> ${escapeHtml(med.patientName)}</p>
+    <p><strong>Dosagem:</strong> ${escapeHtml(med.dosage)}</p>
+    <p><strong>Via:</strong> ${escapeHtml(med.route)}</p>
+    <p><strong>Horário:</strong> ${formatDateTime(med.scheduledAt)}</p>
+    <p><strong>Notas:</strong> ${escapeHtml(med.notes || "Sem notas")}</p>
+    
+    <button id="remove-button" class="btn btn-outline-danger mt-4 w-100">Suspender prescrição</button>
+  `;
+
+}
