@@ -5,8 +5,10 @@
  * evento -> ação -> estado -> render -> tela. Sempre nesse sentido.
  * ============================================================
  */
-import {listMedications, createMedication, getMedication} from "./api.js";
-import { subscribe, getState, setMedications, setError, addMedication, selectMedication, setDetailError, clearSelection } from "./state.js";
+import {listMedications, createMedication, getMedication, removeMedication} from "./api.js";
+
+import { subscribe, getState, setMedications, setError, addMedication, selectMedication, setDetailError, clearSelection, removeMedicationFromState } from "./state.js";
+
 import { renderCounter, renderLoading, renderError, renderMedicationList, renderDetail } from "./render.js";
 
 const medicationListElement = document.querySelector("#medication-list");
@@ -135,3 +137,16 @@ detailPanelElement.addEventListener('click', (event) => {
 //   (delegação de evento no #detail-panel, já que ele é redesenhado)
 //   removeMedication(id) -> removeMedicationFromState(id)
 // ============================================================
+detailPanelElement.addEventListener('click', async (event) => {
+  if (event.target.id === 'remove-button') {
+    const currentState = getState();
+    try {
+      await removeMedication(currentState.selectedId);
+      
+      removeMedicationFromState(currentState.selectedId);
+      
+    } catch (error) {
+      setDetailError(error.message);
+    }
+  }
+});

@@ -74,3 +74,12 @@ export async function getMedication(id) {
 //   method: "DELETE"
 //   sucesso = response.status === 204 (sem corpo, não dá pra fazer .json())
 // ============================================================
+export async function removeMedication(id) {
+    const response = await fetch(`${MEDICATIONS_URL}/${id}`, {
+        method: "DELETE"
+    });
+
+    if(!response.ok){
+        throw new Error("Falha ao suspender a prescrição.");
+    }
+}

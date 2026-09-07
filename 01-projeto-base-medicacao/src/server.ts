@@ -106,6 +106,22 @@ app.get('/api/medications/:id', (request, response) => {
 //   db.prepare("DELETE FROM medication_orders WHERE id = ?").run(id)
 //   responda 204, sem corpo
 // ============================================================
+app.delete('/api/medications/:id', (request, response) => {
+  const id = request.params.id;
+
+  const existing = db.prepare(`SELECT id FROM medication_orders WHERE id = ?`).get(id);
+
+  if(!existing){
+    return response.status(404).json({error: `Prescrição não encontrada.`});
+  }
+
+  db.prepare('DELETE FROM medication_orders WHERE id=?').run(id);
+
+  return response.status(204).send();
+})
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Painel de Medicacao no ar em http://localhost:${PORT}`);
