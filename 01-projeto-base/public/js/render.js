@@ -100,7 +100,7 @@ export function renderPatientList(patients, searchTerm, container) {
       return;
     }
 
-    container.innerHTML = patients.map(patientCardTemplate.join(""));
+    container.innerHTML = patients.map(patientCardTemplate).join("");
 }
 
 /** Atualiza o contador de resultados. */

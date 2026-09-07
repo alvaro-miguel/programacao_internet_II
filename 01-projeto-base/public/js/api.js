@@ -57,6 +57,37 @@ export async function getPatient(id) {
   return response.json();
 }
 
+
+export async function listEncounters(patientId) {
+  const response = await fetch(`/api/patients/${patientId}/encounters`);
+
+  if(!response.ok){
+    throw new Error(`Falha ao buscar atendimetnos (HTTP ${response.status})`);
+  }
+
+  return response.json();
+}
+
+
+export async function createEncounter(patientId, encounterData) {
+  const response = await fetch(`/api/patients/${patientId}/encounters`, {
+    method: "POST",
+    headers: {
+      "Content-type":"application/json"
+    },
+
+    body: JSON.stringify(encounterData)
+  });
+
+  if(!response.ok){
+    const errorBody = await response.json().catch(() => ({}));
+
+    throw new Error(errorBody.error || `Falha ao salvar atendimento (HTTP ${response.status})`);
+  }
+
+  return response.json();
+}
+
 /* ============================================================
    TODO API-1 (Encontro 2, Prática 2)
    Implemente `createPatient(patient)`.

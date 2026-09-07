@@ -45,6 +45,17 @@ app.get("/api/health", (_request, response) => {
 // TODO 1 (Encontro 2, Pratica 1)
 // GET /api/patients  ->  200 com um ARRAY de pacientes.
 // Comece devolvendo um array fixo, escrito na mao. Sem banco ainda.
+
+// ENDPOINT DE BUSCAR UM PACIENTE ESPECÍFICO
+app.get("/api/patients/:id", (req, res) => {
+  const patientId = Number(req.params.id);
+  const patient = db.prepare("SELECT * FROM patients WHERE id = ?").get(patientId);
+  
+  if (!patient) {
+    return res.status(404).json({ error: "Paciente não encontrado" });
+  }
+  return res.status(200).json(patient);
+});
 // ============================================================
 
 // ============================================================
