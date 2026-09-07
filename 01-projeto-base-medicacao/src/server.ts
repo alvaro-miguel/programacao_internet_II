@@ -6,9 +6,10 @@
  * estatico. As quatro rotas da atividade (listar, criar, obter
  * um, remover) ainda nao existem — sao o que voce vai construir.
  */
-import express from "express";
+import express, { response } from "express";
 import { db } from "./database";
 import { error } from "node:console";
+import { request } from "node:http";
 
 const app = express();
 const PORT = 3000;
@@ -51,6 +52,35 @@ app.get("/api/medications", (_request, response) => {
 // PASSO 3 — POST /api/medications
 //   valide patientName, medicationName, dosage, route, scheduledAt
 //   INSERT parametrizado -> responda 201 com o registro criado
+function validateMedication(data: any){
+  if (!data.patientName || data.patientName.trim() === '') return 'Nome do paciente é obrigatório.';
+  if (!data.medicationName || data.medicationName.trim() === '') return 'Nome da medicação é obrigatório.';
+  if (!data.dosage || data.dosage.trim() === '') return 'A dosagem é obrigatória.';
+  if (!data.route || data.route.trim() === '') return 'A via de administração é obrigatória.';
+  
+  const regexData = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+  if (!data.scheduledAt || !regexData.test(data.scheduledAt)) {
+    return 'Data de agendamento inválida. Use o formato YYYY-MM-DDTHH:MM.';
+  }
+  
+  return null;
+}
+
+
+app.post('/api/medications', (request, response) => {
+  const problem = validateMedication(request.body);
+  if(problem){
+    return response.status(400).json({error: problem});
+  }
+
+  const {patientName, medicationName, dosage, route, scheduledAt, notes} = request.body;
+
+  const result = db.prepare(`INSERT INTO medication_orders (patient_name, medication_name, dosage, route, scheduled_at, notes) VALUES (?, ?, ?, ?, ?, ?)`).run(patientName, medicationName, dosage, route, scheduledAt, notes || null);
+
+  const createdRow = db.prepare("SELECT * FROM medication_orders WHERE id = ?").get(result.lastInsertRowid);
+
+  return response.status(201).json(snakeToCamel(createdRow));
+});
 // ============================================================
 
 // ============================================================

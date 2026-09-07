@@ -34,6 +34,20 @@ export async function listMedications() {
 //   method: "POST", headers Content-Type, body: JSON.stringify(medication)
 //   se !response.ok, leia o corpo e jogue o erro com a mensagem do servidor
 // ============================================================
+export async function createMedication(medication) {
+    const response = await fetch(MEDICATIONS_URL, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(medication),
+    });
+
+    if(!response.ok){
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(errorBody.error || `Erro ao salvar (HTTP ${response.status})`);
+    }
+
+    return response.json();
+}
 
 
 // ============================================================

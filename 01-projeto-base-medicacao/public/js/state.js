@@ -65,6 +65,10 @@ export function setError(message) {
 //   acrescenta ao array de medications (imutável: [...state.medications, medication])
 //   notify()
 // ============================================================
+export function addMedication(medication){
+  state.medications = [...state.medications, medication];
+  notify();
+}
 
 
 // ============================================================

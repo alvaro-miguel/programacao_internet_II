@@ -5,8 +5,8 @@
  * evento -> ação -> estado -> render -> tela. Sempre nesse sentido.
  * ============================================================
  */
-import {listMedications} from "./api.js";
-import { subscribe, getState, setMedications, setError } from "./state.js";
+import {listMedications, createMedication} from "./api.js";
+import { subscribe, getState, setMedications, setError, addMedication } from "./state.js";
 import { renderCounter, renderLoading, renderError, renderMedicationList } from "./render.js";
 
 const medicationListElement = document.querySelector("#medication-list");
@@ -62,6 +62,40 @@ subscribe(renderApp);
 //   ler os inputs, chamar createMedication(), addMedication(),
 //   limpar o formulário, mostrar feedback de sucesso/erro
 // ============================================================
+saveButton.addEventListener('click', async () => {
+  saveButton.disabled = true;
+  formFeedbackElement.className = "d-none";
+
+  try{
+    const novaPrescricao = {
+      patientName : patientNameInput.value,
+      medicationName : medicationNameInput.value,
+      dosage : dosageInput.value,
+      route: routeInput.value,
+      scheduledAt: scheduledAtInput.value,
+      notes: notesInput.value,
+    };
+
+    const created = await createMedication(novaPrescricao);
+    addMedication(created);
+
+        
+    patientNameInput.value = "";
+    medicationNameInput.value = "";
+    dosageInput.value = "";
+    routeInput.value = "Oral";
+    scheduledAtInput.value = "";
+    notesInput.value = "";
+
+    formFeedbackElement.textContent = "Prescrição salva com sucesso!";
+    formFeedbackElement.className = "alert alert-sucess mt-3";
+  } catch (error){
+    formFeedbackElement.textContent = error.message;
+    formFeedbackElement.className = "alert alert-danger mt-3";
+  } finally {
+    saveButton.disabled = false;
+  }
+});
 
 
 // ============================================================
