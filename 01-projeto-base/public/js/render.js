@@ -44,16 +44,18 @@ function patientCardTemplate(patient) {
 
   return `
     <li class="patient-card${cardModifier}">
-      <div class="d-flex justify-content-between align-items-start gap-2">
-        <h2 class="patient-card__name">${escapeHtml(patient.name)}</h2>
-        <span class="status-badge ${badgeModifier}">${badgeLabel}</span>
-      </div>
-      <p class="patient-card__meta">
-        Nascimento: ${formatDate(patient.birthDate)}
-      </p>
-      <p class="patient-card__meta patient-card__id">
-        CNS ${escapeHtml(patient.nationalId)} · #${patient.id}
-      </p>
+      <a href="/patient.html?id=${patient.id}" class="text-decoration-none text-dark d-block">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <h2 class="patient-card__name">${escapeHtml(patient.name)}</h2>
+          <span class="status-badge ${badgeModifier}">${badgeLabel}</span>
+        </div>
+        <p class="patient-card__meta">
+          Nascimento: ${formatDate(patient.birthDate)}
+        </p>
+        <p class="patient-card__meta patient-card__id">
+          CNS ${escapeHtml(patient.nationalId)} · #${patient.id}
+        </p>
+      </a>
     </li>
   `;
 }
@@ -93,7 +95,12 @@ function emptyStateTemplate(searchTerm) {
  * entender o React muito melhor depois de ter vivido isso.
  */
 export function renderPatientList(patients, searchTerm, container) {
-  // escreva aqui
+    if(patients.length === 0){
+      container.innerHTML = emptyStateTemplate(searchTerm);
+      return;
+    }
+
+    container.innerHTML = patients.map(patientCardTemplate.join(""));
 }
 
 /** Atualiza o contador de resultados. */

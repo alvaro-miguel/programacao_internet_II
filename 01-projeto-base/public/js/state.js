@@ -89,7 +89,10 @@ export function getVisiblePatients() {
  * Três linhas de atribuição e uma chamada de notify().
  */
 export function setPatients(patients) {
-  // escreva aqui: 
+  state.patients = patients;
+  state.isLoading = false;
+  state.errorMessage = null;
+  notify();
 }
 
 /**
