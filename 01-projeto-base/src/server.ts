@@ -1,0 +1,120 @@
+/**
+ * ============================================================
+ * Mini-Prontuario - Servidor HTTP
+ * ============================================================
+ * Esta semana o servidor e PROPOSITALMENTE simples:
+ * um unico arquivo, sem camadas, sem arquitetura.
+ * O objetivo e enxergar o HTTP acontecendo.
+ *
+ * A separacao em camadas chega na Semana 03. Ate la, o que
+ * queremos e que voce saiba exatamente o que cada linha faz.
+ */
+import { error } from "console";
+import express, { response } from "express";
+import { db } from "./database";
+import { lstat } from "fs";
+
+const app = express();
+const PORT = 3000;
+
+
+// ------------------------------------------------------------
+// MIDDLEWARES - executam ANTES das rotas, em ordem
+// ------------------------------------------------------------
+
+// Le o corpo da requisicao quando o Content-Type e application/json
+// e coloca o resultado em req.body.
+// SEM ESTA LINHA, req.body vem `undefined`. Erro numero 1 da turma.
+app.use(express.json());
+
+// Serve os arquivos de public/ como conteudo estatico.
+// Por isso o frontend e a API vivem na MESMA origem (localhost:3000)
+// e nao precisamos falar de CORS ainda.
+app.use(express.static("public"));
+
+// ------------------------------------------------------------
+// ROTAS
+// ------------------------------------------------------------
+
+/** Rota de saude: serve para saber se o servidor esta de pe. */
+app.get("/api/health", (_request, response) => {
+  response.json({ status: "ok" });
+});
+
+// ============================================================
+// TODO 1 (Encontro 2, Pratica 1)
+// GET /api/patients  ->  200 com um ARRAY de pacientes.
+// Comece devolvendo um array fixo, escrito na mao. Sem banco ainda.
+// ============================================================
+
+// ============================================================
+// TODO 2 (Encontro 2, Pratica 2)
+// POST /api/patients
+//   - leia req.body
+//   - valide: name obrigatorio (texto nao vazio)
+//              birthDate obrigatorio no formato AAAA-MM-DD
+//              nationalId obrigatorio
+//   - se invalido:  400  { "error": "mensagem util" }
+//   - se valido:    201  com o paciente criado
+// ============================================================
+
+// ============================================================
+// TODO 3 (Encontro 2, Pratica 3)
+// Troque o array em memoria pelo banco:
+//   import { db } from "./database";
+//   const rows = db.prepare("SELECT ... FROM patients ORDER BY name").all();
+// E crie GET /api/patients/:id devolvendo 404 quando nao existir.
+// ============================================================
+
+// ------------------------------------------------------------
+// ATIVIDADE A - NIVEL 1
+// ENDPOINT DE LISTAGEM DE ATENDIMENTOS
+app.get("/api/patients/:id/encounters", (req, res) => {
+  const patientId = Number(req.params.id);
+
+  const patient = db.prepare("SELECT * FROM patients WHERE id = ?").get(patientId);
+
+  if(!patient){
+    return res.status(404).json({error: "Paciente não encontrado"});
+  }
+
+  const encounters = db.prepare("SELECT * FROM encounters WHERE patient_id = ?").all(patientId);
+  return res.status(200).json(encounters);
+})
+
+//ENDPOINT DE CRIACAO DE ATENDIMENTOS
+app.post("/api/patients/:id/encounters", (req, res) => {
+  const patientId = Number(req.params.id);
+  const patient = db.prepare("SELECT * FROM patients WHERE id = ?").get(patientId);
+  const regexData = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+
+  if(!patient){
+    return res.status(404).json({error: "Paciente não encontrado"});
+  }
+
+  const {chiefComplaint, startedAt, notes} = req.body;
+
+  if(!chiefComplaint || chiefComplaint.trim() === ""){
+    return res.status(400).json({error: "Queixa principal está vazia"});
+  }
+
+  if(!startedAt || !regexData.test(startedAt)){
+    return res.status(400).json({error: "Data de início inválida"});
+  }
+
+  const info = db.prepare("INSERT INTO encounters (patient_id, started_at, chief_complaint, notes) VALUES (?, ?, ?, ?)").run(patientId, startedAt, chiefComplaint, notes || null);
+
+  const createdEncounter = {
+    id: info.lastInsertRowid,
+    patientId: patientId,
+    startedAt: startedAt,
+    chiefComplaint:chiefComplaint,
+    notes: notes || null
+  };
+
+  return res.status(201).json(createdEncounter);
+})
+
+app.listen(PORT, () => {
+  console.log(`Mini-Prontuario no ar em http://localhost:${PORT}`);
+});
