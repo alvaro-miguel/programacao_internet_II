@@ -60,9 +60,11 @@ app.get("/api/health", (_request, response) => {
 */
 import { patientsRouter } from "./routes/patients.routes.ts";
 import { encountersRouter } from "./routes/encounters.routes.ts";
+import { errorHandler } from "./middlewares/errorHandler.ts";
 
 app.use("/api/patients", patientsRouter);
 app.use("/api/patients/:id/encounters", encountersRouter);
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Mini-Prontuario no ar em http://localhost:${PORT}`);

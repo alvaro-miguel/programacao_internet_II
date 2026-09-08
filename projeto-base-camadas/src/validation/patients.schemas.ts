@@ -12,3 +12,18 @@
  *   patientsRouter.post("/", validate(createPatientSchema), patientsController.create);
  * ============================================================
  */
+
+import { z } from "zod";
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+export const createPatientSchema = z.object({
+  name: z.string({ required_error: "O campo 'name' e obrigatorio." })
+         .min(1, "O campo 'name' nao pode ser vazio."),
+         
+  birthDate: z.string({ required_error: "O campo 'birthDate' e obrigatorio." })
+              .regex(ISO_DATE, "O campo 'birthDate' deve estar no formato AAAA-MM-DD."),
+              
+  nationalId: z.string({ required_error: "O campo 'nationalId' e obrigatorio." })
+               .min(1, "O campo 'nationalId' e obrigatorio.")
+});

@@ -14,3 +14,25 @@
  * }
  * ============================================================
  */
+
+import { Request, Response, NextFunction } from "express";
+import { AnyZodObject, ZodError } from "zod";
+import { BadRequestError } from "../errors/HttpError.ts";
+
+export function validate(schema: AnyZodObject) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      schema.parse(req.body);
+      
+      next();
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const errorDetails = error.issues.map((issue) => issue.message);
+        
+        next(new BadRequestError("Erro de validacao.", errorDetails));
+      } else {
+        next(error);
+      }
+    }
+  };
+}

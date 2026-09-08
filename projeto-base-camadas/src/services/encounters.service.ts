@@ -14,6 +14,7 @@
  */
 
 import { db } from "../db/database";
+import { NotFoundError, BadRequestError } from "../errors/HttpError";
 
 export type EncounterRow = {
   id: number;
@@ -38,20 +39,30 @@ function isBlank(value: unknown): boolean { return typeof value !== "string" || 
 function patientExists(id: string): boolean { return db.prepare("SELECT 1 FROM patients WHERE id = ?").get(id) !== undefined; }
 
 export function getEncountersByPatient(patientId: string) {
-  if (!patientExists(patientId)) return null; 
+  if (!patientExists(patientId)){
+    throw new NotFoundError("Paciente nao encontrado");
+  }
+
   const rows = db.prepare(`SELECT id, patient_id, started_at, chief_complaint, notes FROM encounters WHERE patient_id = ? ORDER BY started_at DESC`).all(patientId) as EncounterRow[];
   return rows.map(toEncounterJson);
 }
 
 export function createEncounter(patientId: string, data: any) {
-  if (!patientExists(patientId)) return { error: "Paciente nao encontrado.", status: 404 };
+  if (!patientExists(patientId)) {
+    throw new NotFoundError("Paciente nao encontrado");
+  }
 
   const { startedAt, chiefComplaint, notes } = data ?? {};
-  if (isBlank(chiefComplaint)) return { error: "O campo 'chiefComplaint' e obrigatorio.", status: 400 };
-  if (isBlank(startedAt) || !ISO_DATE_TIME.test(startedAt)) return { error: "O campo 'startedAt' e obrigatorio no formato AAAA-MM-DDTHH:MM.", status: 400 };
+  if (isBlank(chiefComplaint)){
+    throw new BadRequestError("O campo 'chiefComplaint' e obrigatorio");
+  }
+
+  if (isBlank(startedAt) || !ISO_DATE_TIME.test(startedAt)) {
+    throw new BadRequestError("O campo 'startedAt' e obrigatorio no formato AAAA-MM-DDTHH:MM");
+  }
 
   const result = db.prepare(`INSERT INTO encounters (patient_id, started_at, chief_complaint, notes) VALUES (?, ?, ?, ?)`).run(patientId, startedAt, chiefComplaint.trim(), isBlank(notes) ? null : notes.trim());
   const created = db.prepare(`SELECT id, patient_id, started_at, chief_complaint, notes FROM encounters WHERE id = ?`).get(result.lastInsertRowid) as EncounterRow;
 
-  return { data: toEncounterJson(created), status: 201 };
+  return toEncounterJson(created);
 }
