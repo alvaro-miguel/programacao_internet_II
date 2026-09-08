@@ -1,6 +1,6 @@
 ﻿import { error } from "console";
 import { db } from "../db/database.ts";
-import { NotFoundError, BadRequestError, ConflictError } from "../errors/HttpError.ts";
+import { NotFoundError, BadRequestError, ConflictError, UnprocessableEntityError } from "../errors/HttpError.ts";
 
 export type PatientRow = {
   id: number;
@@ -50,4 +50,19 @@ export function createPatient(data: any) {
 
     return toPatientJson(created);
 
+}
+
+
+export function updatePatientPhoto(id: string, photoPath: string | undefined) {
+
+  if (!photoPath) {
+    throw new UnprocessableEntityError("Arquivo invalido ou ausente. Apenas JPG/PNG ate 2MB.");
+  }
+
+  const patient = getPatientById(id);
+
+  const webPath = photoPath.replace(/\\/g, "/"); 
+  db.prepare("UPDATE patients SET photo_path = ? WHERE id = ?").run(webPath, id);
+
+  return getPatientById(id);
 }
