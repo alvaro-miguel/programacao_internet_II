@@ -1,10 +1,7 @@
-/**
- * Orquestracao -- PRONTA. Liga os elementos do DOM as acoes de
- * estado + api. Nenhuma logica de negocio mora aqui.
- */
-import { listPatients, createPatient } from "./api.js";
+import { listPatients, createPatient, uploadPatientPhoto } from "./api.js";
 import { state, setPatients, addPatient, setFormError, clearFormError } from "./state.js";
 import { render } from "./render.js";
+import { renderApiError } from "./errors.js";
 
 async function init() {
   try {
@@ -15,6 +12,18 @@ async function init() {
   }
   render();
 }
+
+document.getElementById("photo-input").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  const preview = document.getElementById("photo-preview");
+  if (file) {
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+  } else {
+    preview.src = "";
+    preview.style.display = "none";
+  }
+});
 
 document.getElementById("patient-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -29,12 +38,23 @@ document.getElementById("patient-form").addEventListener("submit", async (event)
 
   try {
     const created = await createPatient(payload);
-    addPatient(created);
+    
+    const file = form.photo.files[0];
+    if (file) {
+      const patientWithPhoto = await uploadPatientPhoto(created.id, file);
+      addPatient(patientWithPhoto);
+    } else {
+      addPatient(created); 
+    }
+    
     form.reset();
+    document.getElementById("photo-preview").style.display = "none";
   } catch (err) {
-    // TODO 14 (Encontro 2): trocar por renderApiError(err.apiError)
-    // quando o contrato de erro { error: { message, ... } } estiver pronto.
-    setFormError(err.apiError?.error ?? "Falha ao cadastrar paciente.");
+    if (err.apiError) {
+      renderApiError(err.apiError);
+    } else {
+      setFormError("Falha inesperada ao cadastrar paciente.");
+    }
   }
   render();
 });
