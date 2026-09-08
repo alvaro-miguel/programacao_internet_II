@@ -9,19 +9,11 @@ export const patientsController = {
 
   getOne(request: Request, response: Response) {
     const patient = getPatientById(request.params.id as string);
-    if (!patient) {
-      response.status(404).json({ error: "Paciente nao encontrado." });
-      return;
-    }
     response.status(200).json(patient);
   },
 
   create(request: Request, response: Response) {
-    const result = createPatient(request.body);
-    if (result.error) {
-      response.status(result.status).json({ error: result.error });
-      return;
-    }
-    response.status(result.status).json(result.data);
+    const created = createPatient(request.body);
+    response.status(201).json(created);
   }
 };
