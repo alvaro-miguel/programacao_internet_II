@@ -12,5 +12,5 @@ O material cumpre os requisitos propostos na atividade, abordando:
 - **Exemplos Práticos:** Trechos de código comparando a abordagem monolítica (Antes) com a separada (Depois).
 
 ## 🚀 Como acessar o E-book
-👉 [Acessar E-book no GitHub Pages]([https://SEU_USUARIO_AQUI.github.io/progInternet_II/atividade_e-book/index.html](https://alvaro-miguel.github.io/programacao_internet_II/atividade_e-book/index.html))
+👉 [Acessar E-book no GitHub Pages](https://alvaro-miguel.github.io/programacao_internet_II/atividade_e-book/index.html)
 
