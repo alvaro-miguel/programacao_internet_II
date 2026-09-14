@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="E-book didático sobre Separação das Responsabilidades (SoC) em Engenharia de Software">
+<title>Separação das Responsabilidades (SoC) — E-book</title>
+<style>
+  /* ============================================================
+     VARIÁVEIS E RESET
+     ============================================================ */
+  :root {
+    --cor-primaria: #1a237e;
+    --cor-secundaria: #283593;
+    --cor-destaque: #e65100;
+    --cor-fundo: #fafafa;
+    --cor-fundo-card: #ffffff;
+    --cor-codigo: #f5f5f5;
+    --cor-borda: #e0e0e0;
+    --cor-texto: #212121;
+    --cor-texto-suave: #555555;
+    --cor-sucesso: #2e7d32;
+    --cor-alerta: #c62828;
+    --sombra: 0 2px 8px rgba(0,0,0,0.08);
+    --sombra-forte: 0 4px 16px rgba(0,0,0,0.12);
+    --raio: 8px;
+    --transicao: 0.25s ease;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--cor-texto);
+    background: var(--cor-fundo);
+    -webkit-font-smoothing: antialiased;
+    padding-top: 60px;
+  }
+
+  /* ============================================================
+     HEADER FIXO
+     ============================================================ */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--cor-primaria);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 1000;
+    box-shadow: var(--sombra-forte);
+  }
+
+  header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #menu-toggle {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background var(--transicao);
+    line-height: 1;
+  }
+  #menu-toggle:hover { background: rgba(255,255,255,0.15); }
+
+  /* ============================================================
+     NAVEGAÇÃO LATERAL (DRAWER)
+     ============================================================ */
+  #sidebar {
+    position: fixed;
+    top: 60px; left: 0; bottom: 0;
+    width: 300px;
+    max-width: 85vw;
+    background: var(--cor-fundo-card);
+    border-right: 1px solid var(--cor-borda);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform var(--transicao);
+    z-index: 999;
+    padding: 16px 0;
+  }
+
+  #sidebar.open { transform: translateX(0); }
+
+  #sidebar h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--cor-texto-suave);
+    padding: 12px 20px 8px;
+    font-weight: 700;
+  }
+
+  #sidebar a {
+    display: block;
+    padding: 10px 20px;
+    color: var(--cor-texto);
+    text-decoration: none;
+    font-size: 14px;
+    border-left: 3px solid transparent;
+    transition: all var(--transicao);
+  }
+
+  #sidebar a:hover,
+  #sidebar a.active {
+    background: #e8eaf6;
+    border-left-color: var(--cor-primaria);
+    color: var(--cor-primaria);
+    font-weight: 500;
+  }
+
+  #overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 998;
+  }
+  #overlay.active { display: block; }
+
+  /* ============================================================
+     CONTEÚDO PRINCIPAL
+     ============================================================ */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+
+  /* CAPA */
+  .capa {
+    text-align: center;
+    padding: 40px 20px 60px;
+    background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+    color: #fff;
+    border-radius: var(--raio);
+    margin-bottom: 40px;
+    box-shadow: var(--sombra-forte);
+  }
+
+  .capa h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .capa .subtitulo {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 24px;
+    font-weight: 300;
+  }
+
+  .capa .linha {
+    width: 80px;
+    height: 3px;
+    background: var(--cor-destaque);
+    margin: 20px auto;
+    border-radius: 2px;
+  }
+
+  .capa .descricao {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* SEÇÕES */
+  section {
+    margin-bottom: 48px;
+    scroll-margin-top: 80px;
+  }
+
+  h2.capitulo {
+    font-size: 1.6rem;
+    color: var(--cor-primaria);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 3px solid var(--cor-destaque);
+    line-height: 1.3;
+    font-weight: 700;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+    color: var(--cor-secundaria);
+    margin: 28px 0 14px;
+    font-weight: 600;
+  }
+
+  h4 {
+    font-size: 1.05rem;
+    color: var(--cor-destaque);
+    margin: 20px 0 10px;
+    font-weight: 600;
+  }
+
+  p {
+    margin-bottom: 14px;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  ul, ol {
+    margin: 12px 0 18px 24px;
+  }
+
+  li {
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
+  strong { color: var(--cor-primaria); }
+
+  /* ============================================================
+     CAIXAS DE DESTAQUE
+     ============================================================ */
+  .caixa-destaque {
+    background: linear-gradient(135deg, #e8eaf6 0%, #f3f4fc 100%);
+    border-left: 4px solid var(--cor-primaria);
+    border-radius: var(--raio);
+    padding: 18px 20px;
+    margin: 20px 0;
+    box-shadow: var(--sombra);
+  }
+
+  .caixa-destaque .titulo {
+    font-weight: 700;
+    color: var(--cor-primaria);
+    margin-bottom: 8px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .caixa-destaque .titulo::before {
+    content: "💡";
+    font-size: 1.2rem;
+  }
+
+  .caixa-alerta {
+    background: #fff3e0;
+    border-left: 4px solid var(--cor-destaque);
+  }
+  .caixa-alerta .titulo { color: var(--cor-destaque); }
+  .caixa-alerta .titulo::before { content: "⚠️"; }
+
+  .caixa-sucesso {
+    background: #e8f5e9;
+    border-left: 4px solid var(--cor-sucesso);
+  }
+  .caixa-sucesso .titulo { color: var(--cor-sucesso); }
+  .caixa-sucesso .titulo::before { content: "✅"; }
+
+  /* ============================================================
+     BLOCOS DE CÓDIGO
+     ============================================================ */
+  pre {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 16px;
+    border-radius: var(--raio);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 16px 0;
+    font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
+    box-shadow: var(--sombra);
+    position: relative;
+  }
+
+  pre::-webkit-scrollbar { height: 8px; }
+  pre::-webkit-scrollbar-track { background: #2d2d2d; }
+  pre::-webkit-scrollbar-thumb {
+    background: #555; border-radius: 4px;
+  }
+
+  code {
+    font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
+    font-size: 0.9em;
+  }
+
+  p code, li code {
+    background: #eceff1;
+    color: #c62828;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  /* Syntax highlighting (simples via spans) */
+  .kw  { color: #569cd6; }  /* keyword */
+  .str { color: #ce9178; }  /* string */
+  .com { color: #6a9955; font-style: italic; }  /* comment */
+  .num { color: #b5cea8; }  /* number */
+  .typ { color: #4ec9b0; }  /* type/class */
+  .fn  { color: #dcdcaa; }  /* function */
+  .op  { color: #d4d4d4; }  /* operator */
+
+  .codigo-label {
+    display: inline-block;
+    background: var(--cor-primaria);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 4px 4px 0 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .codigo-label.antes { background: var(--cor-alerta); }
+  .codigo-label.depois { background: var(--cor-sucesso); }
+
+  /* ============================================================
+     TABELAS RESPONSIVAS
+     ============================================================ */
+  .tabela-wrapper {
+    overflow-x: auto;
+    margin: 20px 0;
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    width: 100%;
+    min-width: 500px;
+    border-collapse: collapse;
+    background: var(--cor-fundo-card);
+    font-size: 14px;
+  }
+
+  thead {
+    background: var(--cor-primaria);
+    color: #fff;
+  }
+
+  th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+
+  td {
+    padding: 12px 14px;
+    border-top: 1px solid var(--cor-borda);
+    vertical-align: top;
+  }
+
+  tbody tr:nth-child(even) { background: #f9f9fb; }
+  tbody tr:hover { background: #e8eaf6; }
+
+  /* ============================================================
+     DIAGRAMAS SVG
+     ============================================================ */
+  .diagrama {
+    background: var(--cor-fundo-card);
+    border-radius: var(--raio);
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: var(--sombra);
+    text-align: center;
+    overflow-x: auto;
+  }
+
+  .diagrama svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .diagrama-legenda {
+    font-size: 13px;
+    color: var(--cor-texto-suave);
+    margin-top: 12px;
+    font-style: italic;
+    text-align: center;
+  }
+
+  /* ============================================================
+     BOTÃO VOLTAR AO TOPO
+     ============================================================ */
+  #topo {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    background: var(--cor-primaria);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: var(--sombra-forte);
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transicao);
+    z-index: 900;
+  }
+
+  #topo.visivel { opacity: 1; visibility: visible; }
+  #topo:hover { background: var(--cor-secundaria); transform: translateY(-3px); }
+
+  /* ============================================================
+     RODAPÉ
+     ============================================================ */
+  footer {
+    background: var(--cor-primaria);
+    color: #fff;
+    text-align: center;
+    padding: 30px 20px;
+    font-size: 13px;
+    margin-top: 40px;
+  }
+
+  footer p { text-align: center; margin-bottom: 6px; opacity: 0.9; }
+
+  /* ============================================================
+     RESPONSIVIDADE
+     ============================================================ */
+  @media (min-width: 1024px) {
+    body { padding-left: 320px; padding-top: 0; }
+    header {
+      left: 300px;
+      height: 70px;
+      padding: 0 32px;
+    }
+    header h1 { font-size: 18px; }
+    #menu-toggle { display: none; }
+    #sidebar { transform: translateX(0); top: 0; width: 300px; }
+    #overlay { display: none !important; }
+    main { padding: 40px 40px 100px; }
+    .capa { padding: 60px 40px 80px; }
+    .capa h1 { font-size: 2.8rem; }
+    .capa .subtitulo { font-size: 1.3rem; }
+  }
+
+  @media (max-width: 480px) {
+    .capa h1 { font-size: 1.5rem; }
+    .capa .subtitulo { font-size: 0.95rem; }
+    h2.capitulo { font-size: 1.3rem; }
+    h3 { font-size: 1.08rem; }
+    pre { font-size: 11.5px; padding: 12px; }
+    body { font-size: 15px; }
+  }
+
+  /* Animação de fade-in suave */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  section { animation: fadeIn 0.4s ease; }
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header>
+  <button id="menu-toggle" aria-label="Abrir menu">☰</button>
+  <h1>Separação das Responsabilidades (SoC)</h1>
+</header>
+
+<!-- ============ OVERLAY ============ -->
+<div id="overlay"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<nav id="sidebar">
+  <h2>Sumário</h2>
+  <a href="#cap1">1. Introdução</a>
+  <a href="#cap2">2. Contexto Histórico</a>
+  <a href="#cap3">3. Definição Formal</a>
+  <a href="#cap4">4. Problema que Resolve</a>
+  <a href="#cap5">5. Relação com SOLID</a>
+  <a href="#cap6">6. Outros Conceitos Clássicos</a>
+  <a href="#cap7">7. Explicação Profunda</a>
+  <a href="#cap8">8. Efeitos Colaterais</a>
+  <a href="#cap9">9. Exemplos Antes/Depois</a>
+  <a href="#cap10">10. Arquiteturas de Referência</a>
+  <a href="#cap11">11. SoC na Era da IA</a>
+  <a href="#cap12">12. Estudos de Caso</a>
+  <a href="#cap13">13. Conclusão</a>
+  <a href="#cap14">14. Referências</a>
+</nav>
+
+<!-- ============ CONTEÚDO PRINCIPAL ============ -->
+<main>
+
+  <!-- CAPA -->
+  <div class="capa">
+    <h1>Separação das<br>Responsabilidades</h1>
+    <p class="subtitulo">Separation of Concerns — SoC</p>
+    <div class="linha"></div>
+    <p class="descricao">Guia Completo de Didática em Engenharia de Software</p>
+  </div>
+
+  <!-- ============ CAPÍTULO 1 ============ -->
+  <section id="cap1">
+    <h2 class="capitulo">1. Introdução: O que é Separação das Responsabilidades?</h2>
+
+    <p>A <strong>Separação das Responsabilidades</strong> (em inglês, <em>Separation of Concerns</em> — SoC) é um dos princípios mais fundamentais e duradouros da engenharia de software. Trata-se de uma estratégia cognitiva e arquitetural que consiste em decompor um sistema complexo em partes distintas e independentes, onde cada parte aborda uma responsabilidade específica — ou um <em>concern</em> — minimizando a sobreposição funcional entre elas.</p>
+
+    <p>O termo foi cunhado pelo renomado cientista da computação <strong>Edsger W. Dijkstra</strong> em seu artigo de 1974, "On the Role of Scientific Thought", onde argumentou que a única técnica eficaz para lidar com a complexidade é focar a atenção em um único aspecto do problema por vez, temporariamente ignorando os demais.</p>
+
+    <p>Imagine a construção de uma cidade. Existem sistemas independentes para esgoto, abastecimento de água, rede elétrica, telecomunicações e vias de transporte. Cada um desses sistemas tem uma responsabilidade clara e opera de forma relativamente independente. Se a rede elétrica falhar, o sistema de esgoto continua funcionando. Essa é a essência da Separação das Responsabilidades aplicada à arquitetura de software.</p>
+
+    <div class="caixa-destaque">
+      <div class="titulo">Conceito-Chave</div>
+      <p>Separação das Responsabilidades não é sobre dividir código por dividir. É sobre identificar <strong>responsabilidades coesas</strong> e garantir que cada módulo, classe ou componente tenha <strong>apenas uma razão para mudar</strong>. Isso maximiza a manutenibilidade, a testabilidade e a capacidade de evolução do sistema.</p>
+    </div>
+
+    <h3>1.1 Por que este princípio é fundamental?</h3>
+    <p>A complexidade é o principal inimigo do desenvolvedor de software. À medida que um sistema cresce, o número de interações entre seus componentes aumenta exponencialmente. Sem uma estratégia disciplinada de decomposição, o código torna-se um emaranhado difícil de entender, testar e modificar — o temido "código espaguete".</p>
+
+    <p>Além disso, o SoC está intrinsecamente ligado às limitações da cognição humana. Nossa memória de trabalho tem capacidade limitada, e tentar manter múltiplas responsabilidades em mente simultaneamente leva a erros e a um entendimento superficial.</p>
+
+    <h3>1.2 Visão Geral do E-book</h3>
+    <p>Este e-book está organizado para oferecer uma compreensão completa e progressiva da Separação das Responsabilidades. Começaremos pelo contexto histórico e pela definição formal, depois exploraremos como o SoC se relaciona com os princípios SOLID e outros conceitos clássicos. Em seguida, apresentaremos exemplos práticos de código, analisaremos seu impacto em arquiteturas de referência e discutiremos o papel crucial do SoC na era do desenvolvimento assistido por IA.</p>
+  </section>
+
+  <!-- ============ CAPÍTULO 2 ============ -->
+  <section id="cap2">
+    <h2 class="capitulo">2. Contexto Histórico: A Origem do Princípio</h2>
+
+    <p>Para compreender plenamente a Separação das Responsabilidades, é essencial mergulhar em suas origens históricas e entender o contexto intelectual que levou Dijkstra a formular esse princípio.</p>
+
+    <h3>2.1 Edsger W. Dijkstra e o Artigo de 1974</h3>
+    <p>Edsger Wybe Dijkstra (1930–2002) foi um dos cientistas da computação mais influentes do século XX, laureado com o Prêmio Turing em 1972. Em seu artigo "On the Role of Scientific Thought", publicado em 1974, Dijkstra introduziu a expressão "separation of concerns". Ele escreveu:</p>
+
+    <blockquote style="border-left: 4px solid var(--cor-primaria); padding: 12px 20px; margin: 20px 0; font-style: italic; color: #555; background: #f9f9fb; border-radius: 0 8px 8px 0;">
+      "Este é o significado do que quero dizer com 'focar a atenção em um determinado aspecto'; não significa ignorar completamente os outros, mas esquecê-los temporariamente na medida em que são irrelevantes para o tópico atual."
+    </blockquote>
+
+    <p>Nessa passagem, Dijkstra articula uma ideia que transcende a programação: a decomposição de problemas complexos em partes gerenciáveis é uma estratégia cognitiva fundamental.</p>
+
+    <h3>2.2 A Evolução do Conceito</h3>
+    <p>Embora Dijkstra tenha cunhado o termo, a ideia de separar responsabilidades já estava presente em trabalhos anteriores. Na década de 1960, a programação estruturada já enfatizava a decomposição de programas em procedimentos e funções. Na década de 1970, David Parnas publicou seu influente artigo "On the Criteria To Be Used in Decomposing Systems into Modules" (1972), estabelecendo as bases para a modularização baseada em ocultação de informação.</p>
+
+    <h3>2.3 Linha do Tempo do SoC</h3>
+
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr><th>Período</th><th>Marco</th><th>Contribuição</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1968-1969</td><td>Programação Estruturada</td><td>Decomposição em procedimentos com responsabilidades claras</td></tr>
+          <tr><td>1972</td><td>Parnas — Decomposição em Módulos</td><td>Ocultação de informação e modularização</td></tr>
+          <tr><td>1974</td><td>Dijkstra — "On the Role of Scientific Thought"</td><td>Cunha o termo "separation of concerns"</td></tr>
+          <tr><td>1994-1996</td><td>Design Patterns (GoF)</td><td>Padrões como Observer e Strategy promovem separação</td></tr>
+          <tr><td>1997</td><td>AOP (AspectJ)</td><td>Separação de crosscutting concerns em aspectos</td></tr>
+          <tr><td>2003</td><td>Princípios SOLID</td><td>SRP formaliza separação em nível de classe</td></tr>
+          <tr><td>2012</td><td>Clean Architecture</td><td>SoC como princípio central da arquitetura</td></tr>
+          <tr><td>2015</td><td>Microsserviços</td><td>Separação em nível de serviços distribuídos</td></tr>
+          <tr><td>2023+</td><td>IA Generativa e LLMs</td><td>SoC como guia para prompts e agentes de IA</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ CAPÍTULO 3 ============ -->
+  <section id="cap3">
+    <h2 class="capitulo">3. Definição Formal e Conceitos Fundamentais</h2>
+
+    <p>A Separação das Responsabilidades é um princípio de design que orienta a decomposição de sistemas de software em partes distintas, cada uma responsável por um aspecto específico do problema.</p>
+
+    <h3>3.1 O que é um "Concern" (Responsabilidade)?</h3>
+    <p>Um <em>concern</em> é qualquer aspecto do sistema que merece ser tratado como uma unidade conceitual distinta. Pode ser um requisito funcional, não funcional, uma restrição, um dado, uma função, ou qualquer outra característica do sistema ou do domínio que valha a pena analisar isoladamente.</p>
+
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr><th>Categoria</th><th>Descrição</th><th>Exemplos</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Gerais</strong></td><td>Presentes em quase todos os sistemas</td><td>Tratamento de erro, persistência, auditoria, logging, segurança</td></tr>
+          <tr><td><strong>Do Domínio</strong></td><td>Relacionados a um domínio específico</td><td>Autonomia em sistemas multiagentes, mobilidade</td></tr>
+          <tr><td><strong>Da Aplicação</strong></td><td>Funcionalidades específicas de um sistema</td><td>Cálculo de frete, geração de relatórios, pagamentos</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>3.2 Definição Formal de SoC</h3>
+
+    <div class="caixa-destaque">
+      <div class="titulo">Definição</div>
+      <p><strong>Separação das Responsabilidades (SoC)</strong> é um princípio de design de software que estabelece que um sistema deve ser decomposto em partes distintas e minimamente sobrepostas, onde cada parte encapsula uma responsabilidade específica e bem definida. O objetivo é reduzir o acoplamento entre as partes, aumentar a coesão interna de cada parte e facilitar a compreensão, manutenção, teste e evolução do sistema.</p>
+    </div>
+
+    <h3>3.3 Conceitos Relacionados</h3>
+
+    <p><strong>Coesão:</strong> Refere-se ao grau em que os elementos de um módulo estão relacionados entre si. Alta coesão significa que todos os elementos do módulo contribuem para uma única responsabilidade bem definida.</p>
+
+    <p><strong>Acoplamento:</strong> Refere-se ao grau de dependência entre módulos. Baixo acoplamento significa que mudanças em um módulo têm impacto mínimo em outros módulos.</p>
+
+    <p><strong>Modularidade:</strong> É a propriedade de um sistema que foi decomposto em módulos distintos e independentes.</p>
+
+    <p><strong>Encapsulamento:</strong> É o mecanismo pelo qual os detalhes de implementação de um módulo são ocultados dos demais, expondo apenas uma interface pública.</p>
+  </section>
+
+  <!-- ============ CAPÍTULO 4 ============ -->
+  <section id="cap4">
+    <h2 class="capitulo">4. O Problema que o SoC Resolve e Previne</h2>
+
+    <p>Para apreciar plenamente o valor da Separação das Responsabilidades, é fundamental compreender os problemas que ela resolve e previne.</p>
+
+    <h3>4.1 O Problema do Monolito Não Estruturado</h3>
+    <p>Quando todas as responsabilidades de um sistema estão concentradas em um único componente, temos o que chamamos de monolito não estruturado. Os sintomas clássicos incluem:</p>
+
+    <ul>
+      <li>Classes com centenas ou milhares de linhas, realizando múltiplas tarefas distintas;</li>
+      <li>Funções que misturam lógica de apresentação, regras de negócio e acesso a dados;</li>
+      <li>Dificuldade extrema em escrever testes unitários;</li>
+      <li>Alto risco de regressão: uma mudança simples quebra funcionalidades não relacionadas;</li>
+      <li>Impossibilidade de reutilizar componentes em outros contextos;</li>
+      <li>Onboarding de novos desenvolvedores lento e doloroso.</li>
+    </ul>
+
+    <h3>4.2 O Problema do Acoplamento Excessivo</h3>
+    <p>O acoplamento excessivo ocorre quando módulos dependem uns dos outros de forma profunda. Uma mudança em um módulo frequentemente requer mudanças em cascata em vários outros. O SoC ataca esse problema ao definir fronteiras claras entre os módulos.</p>
+
+    <h3>4.3 O Problema da Baixa Coesão</h3>
+    <p>Baixa coesão significa que os elementos dentro de um módulo não estão logicamente relacionados. Uma classe que acessa o banco de dados, renderiza UI e valida regras de negócio tem baixa coesão.</p>
+
+    <h3>4.4 O Problema da Complexidade Cognitiva</h3>
+    <p>Quando um desenvolvedor precisa manter em mente múltiplas responsabilidades simultaneamente, sua capacidade de raciocínio lógico e de identificação de erros diminui drasticamente.</p>
+
+    <div class="caixa-destaque caixa-alerta">
+      <div class="titulo">Problemas que o SoC Previne</div>
+      <p>
+        <strong>1. Código Espaguete:</strong> Emaranhado de dependências sem estrutura clara.<br>
+        <strong>2. Dívida Técnica Acelerada:</strong> Cada mudança torna o código mais difícil de manter.<br>
+        <strong>3. Testabilidade Comprometida:</strong> Impossibilidade de testar unidades isoladamente.<br>
+        <strong>4. Reuso Impossível:</strong> Componentes não podem ser extraídos e reutilizados.<br>
+        <strong>5. Escalabilidade Organizacional:</strong> Times não podem trabalhar em paralelo com segurança.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ CAPÍTULO 5 ============ -->
+  <section id="cap5">
+    <h2 class="capitulo">5. Relação com os Princípios SOLID</h2>
+
+    <p>Os princípios SOLID, formalizados por Robert C. Martin (Uncle Bob) no início dos anos 2000, são um conjunto de cinco diretrizes de design orientado a objetos. A Separação das Responsabilidades é o fundamento subjacente a todos eles.</p>
+
+    <div class="diagrama">
+      <svg viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama dos princípios SOLID">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#e8eaf6"/>
+            <stop offset="100%" stop-color="#c5cae9"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Círculo central -->
+        <circle cx="250" cy="200" r="75" fill="url(#grad1)" stroke="#1a237e" stroke-width="3"/>
+        <text x="250" y="195" text-anchor="middle" font-family="Arial" font-size="26" font-weight="bold" fill="#1a237e">SOLID</text>
+        <text x="250" y="220" text-anchor="middle" font-family="Arial" font-size="14" fill="#283593">&amp; SoC</text>
+
+        <!-- Nós -->
+        <g font-family="Arial" font-size="13" font-weight="bold" fill="#e65100" text-anchor="middle">
+          <rect x="30" y="60" width="90" height="50" rx="6" fill="#fff8e1" stroke="#e65100" stroke-width="1.5"/>
+          <text x="75" y="82">SRP</text>
+          <text x="75" y="100" font-size="9" font-weight="normal" fill="#555">Responsabilidade</text>
+
+          <rect x="380" y="60" width="90" height="50" rx="6" fill="#fff8e1" stroke="#e65100" stroke-width="1.5"/>
+          <text x="425" y="82">OCP</text>
+          <text x="425" y="100" font-size="9" font-weight="normal" fill="#555">Aberto/Fechado</text>
+
+          <rect x="30" y="290" width="90" height="50" rx="6" fill="#fff8e1" stroke="#e65100" stroke-width="1.5"/>
+          <text x="75" y="312">LSP</text>
+          <text x="75" y="330" font-size="9" font-weight="normal" fill="#555">Liskov</text>
+
+          <rect x="380" y="290" width="90" height="50" rx="6" fill="#fff8e1" stroke="#e65100" stroke-width="1.5"/>
+          <text x="425" y="312">ISP</text>
+          <text x="425" y="330" font-size="9" font-weight="normal" fill="#555">Segregação</text>
+
+          <rect x="205" y="355" width="90" height="50" rx="6" fill="#fff8e1" stroke="#e65100" stroke-width="1.5"/>
+          <text x="250" y="377">DIP</text>
+          <text x="250" y="395" font-size="9" font-weight="normal" fill="#555">Inversão</text>
+        </g>
+
+        <!-- Linhas de conexão -->
+        <g stroke="#9e9e9e" stroke-width="1" stroke-dasharray="3,3">
+          <line x1="120" y1="85" x2="185" y2="155"/>
+          <line x1="380" y1="85" x2="315" y2="155"/>
+          <line x1="120" y1="315" x2="185" y2="245"/>
+          <line x1="380" y1="315" x2="315" y2="245"/>
+          <line x1="250" y1="355" x2="250" y2="275"/>
+        </g>
+      </svg>
+      <p class="diagrama-legenda">Os cinco princípios SOLID e sua conexão com o SoC</p>
+    </div>
+
+    <h3>5.1 Single Responsibility Principle (SRP)</h3>
+    <p>O SRP afirma que "uma classe deve ter apenas uma razão para mudar". Esta é a aplicação mais direta do SoC no nível de classe. Uma classe que tem múltiplas responsabilidades terá múltiplas razões para mudar.</p>
+
+    <div class="caixa-destaque caixa-sucesso">
+      <div class="titulo">Conexão SRP ↔ SoC</div>
+      <p>O SRP é a expressão tática do SoC no nível de classe. Enquanto o SoC é um princípio arquitetural amplo, o SRP o operacionaliza no dia a dia do desenvolvedor.</p>
+    </div>
+
+    <h3>5.2 Open/Closed Principle (OCP)</h3>
+    <p>O OCP estabelece que "entidades de software devem estar abertas para extensão, mas fechadas para modificação". Este princípio depende diretamente do SoC, pois para estender sem modificar, é necessário que as responsabilidades estejam separadas.</p>
+
+    <h3>5.3 Liskov Substitution Principle (LSP)</h3>
+    <p>O LSP afirma que "objetos de uma superclasse devem ser substituíveis por objetos de suas subclasses sem quebrar o programa". O SoC contribui ao garantir que as hierarquias de herança sejam semanticamente coerentes.</p>
+
+    <h3>5.4 Interface Segregation Principle (ISP)</h3>
+    <p>O ISP defende que "nenhum cliente deve ser forçado a depender de métodos que não utiliza". Aplicação direta do SoC no nível de interfaces: em vez de interfaces "gordas", devemos ter interfaces específicas e coesas.</p>
+
+    <h3>5.5 Dependency Inversion Principle (DIP)</h3>
+    <p>O DIP estabelece que "módulos de alto nível não devem depender de módulos de baixo nível; ambos devem depender de abstrações". O SoC separa as políticas de negócio dos detalhes de implementação.</p>
+
+    <h3>5.6 Tabela Comparativa</h3>
+
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr><th>Princípio</th><th>Foco</th><th>Relação com SoC</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>SRP</strong></td><td>Uma razão para mudar por classe</td><td>Aplicação direta do SoC em nível de classe</td></tr>
+          <tr><td><strong>OCP</strong></td><td>Extensão sem modificação</td><td>Depende da separação para permitir extensão</td></tr>
+          <tr><td><strong>LSP</strong></td><td>Substituição sem quebra</td><td>Hierarquias semanticamente coerentes</td></tr>
+          <tr><td><strong>ISP</strong></td><td>Interfaces específicas</td><td>SoC no nível de interfaces</td></tr>
+          <tr><td><strong>DIP</strong></td><td>Dependência de abstrações</td><td>Separa políticas de negócio dos detalhes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ CAPÍTULO 6 ============ -->
+  <section id="cap6">
+    <h2 class="capitulo">6. SoC e Outros Conceitos Clássicos da Engenharia de Software</h2>
+
+    <p>Além dos princípios SOLID, a Separação das Responsabilidades se relaciona intimamente com diversos outros conceitos clássicos da engenharia de software.</p>
+
+    <h3>6.1 Programação Orientada a Aspectos (AOP)</h3>
+    <p>A AOP surgiu no final dos anos 1990 como uma resposta ao problema dos <em>crosscutting concerns</em> — responsabilidades que naturalmente se espalham por múltiplos módulos. AOP propõe encapsular esses concerns em unidades chamadas <em>aspectos</em>.</p>
+
+    <h3>6.2 Injeção de Dependência (DI)</h3>
+    <p>A DI é um padrão de design que implementa o princípio da Inversão de Dependência (DIP). Em vez de um módulo criar suas próprias dependências, elas são fornecidas de fora.</p>
+
+    <h3>6.3 Padrões de Projeto (Design Patterns)</h3>
+    <p>Muitos padrões do GoF são aplicações do SoC a problemas recorrentes:</p>
+    <ul>
+      <li><strong>Strategy:</strong> Separa algoritmos da classe que os utiliza;</li>
+      <li><strong>Observer:</strong> Separa o objeto observado dos observadores;</li>
+      <li><strong>Template Method:</strong> Separa a estrutura do algoritmo dos passos específicos;</li>
+      <li><strong>Facade:</strong> Separa a complexidade de um subsistema de seus clientes.</li>
+    </ul>
+
+    <h3>6.4 Lei de Demeter (Princípio do Menor Conhecimento)</h3>
+    <p>A Lei de Demeter estabelece que um módulo não deve conhecer os detalhes internos dos objetos com os quais interage. É uma consequência natural do SoC.</p>
+
+    <h3>6.5 Domain-Driven Design (DDD)</h3>
+    <p>O DDD enfatiza a separação do domínio do negócio das preocupações técnicas. O conceito de <em>Bounded Context</em> é particularmente relevante: define fronteiras explícitas dentro das quais um modelo de domínio é aplicado.</p>
+
+    <h3>6.6 Tabela de Relações Conceituais</h3>
+
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr><th>Conceito</th><th>Descrição</th><th>Relação com SoC</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>AOP</strong></td><td>Separação de crosscutting concerns</td><td>Técnica avançada para SoC de concerns transversais</td></tr>
+          <tr><td><strong>DI</strong></td><td>Injeção de dependências externas</td><td>Mecanismo concreto para implementar DIP e SoC</td></tr>
+          <tr><td><strong>Padrões GoF</strong></td><td>Soluções recorrentes de design</td><td>Muitos padrões são aplicações do SoC</td></tr>
+          <tr><td><strong>Lei de Demeter</strong></td><td>Princípio do menor conhecimento</td><td>Consequência natural do SoC</td></tr>
+          <tr><td><strong>DDD</strong></td><td>Foco no domínio do negócio</td><td>Bounded Contexts separam responsabilidades</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ CAPÍTULO 7 ============ -->
+  <section id="cap7">
+    <h2 class="capitulo">7. Explicação Profunda: Mecanismos e Dimensões</h2>
+
+    <p>A Separação das Responsabilidades não é um conceito monolítico. Ela opera em múltiplas dimensões e pode ser implementada através de diversos mecanismos.</p>
+
+    <h3>7.1 Dimensões da Separação</h3>
+
+    <ul>
+      <li><strong>Dimensão Vertical (Camadas):</strong> Separação por níveis de abstração: apresentação, aplicação, domínio e infraestrutura.</li>
+      <li><strong>Dimensão Horizontal (Features):</strong> Separação por funcionalidades ou features do sistema.</li>
+      <li><strong>Dimensão de Aspectos (Crosscutting):</strong> Separação de concerns que atravessam múltiplas camadas, como logging e segurança.</li>
+      <li><strong>Dimensão Temporal:</strong> Processamento síncrono vs. assíncrono, batch vs. tempo real.</li>
+      <li><strong>Dimensão de Dados:</strong> Leitura vs. escrita (CQRS), transacional vs. analítico.</li>
+    </ul>
+
+    <h3>7.2 Mecanismos de Implementação</h3>
+
+    <ol>
+      <li><strong>Funções e Procedimentos:</strong> Nível mais básico: dividir um programa em funções com responsabilidades específicas.</li>
+      <li><strong>Classes e Objetos:</strong> Agrupar dados e comportamentos relacionados em classes com responsabilidade única.</li>
+      <li><strong>Módulos e Pacotes:</strong> Organizar classes relacionadas em módulos.</li>
+      <li><strong>Camadas Arquiteturais:</strong> Separar o sistema em camadas com responsabilidades distintas.</li>
+      <li><strong>Serviços:</strong> Separar responsabilidades em serviços independentes.</li>
+      <li><strong>Aspectos:</strong> Encapsular crosscutting concerns em unidades separadas.</li>
+    </ol>
+
+    <h3>7.3 O Papel das Interfaces</h3>
+    <p>As interfaces desempenham um papel crucial na Separação das Responsabilidades. Elas definem contratos claros entre os módulos, permitindo que a implementação interna de um módulo mude sem afetar os demais.</p>
+
+    <h3>7.4 Diagrama de Camadas Arquiteturais</h3>
+
+    <div class="diagrama">
+      <svg viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de camadas arquiteturais">
+        <!-- Apresentação -->
+        <rect x="60" y="30" width="380" height="65" rx="8" fill="#e3f2fd" stroke="#1a237e" stroke-width="2"/>
+        <text x="250" y="60" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a237e">Apresentação (UI)</text>
+        <text x="250" y="80" text-anchor="middle" font-family="Arial" font-size="11" fill="#555">Controllers, Views, DTOs</text>
+
+        <!-- Seta 1 -->
+        <polygon points="250,95 245,105 255,105" fill="#757575"/>
+        <line x1="250" y1="95" x2="250" y2="120" stroke="#757575" stroke-width="1.5"/>
+
+        <!-- Aplicação -->
+        <rect x="60" y="125" width="380" height="65" rx="8" fill="#e8eaf6" stroke="#283593" stroke-width="2"/>
+        <text x="250" y="155" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#283593">Aplicação (Casos de Uso)</text>
+        <text x="250" y="175" text-anchor="middle" font-family="Arial" font-size="11" fill="#555">Orquestração, transações, DTOs</text>
+
+        <!-- Seta 2 -->
+        <polygon points="250,190 245,200 255,200" fill="#757575"/>
+        <line x1="250" y1="190" x2="250" y2="215" stroke="#757575" stroke-width="1.5"/>
+
+        <!-- Domínio -->
+        <rect x="60" y="220" width="380" height="65" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+        <text x="250" y="250" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#e65100">Domínio (Regras de Negócio)</text>
+        <text x="250" y="270" text-anchor="middle" font-family="Arial" font-size="11" fill="#555">Entidades, Value Objects, Domain Services</text>
+
+        <!-- Seta 3 -->
+        <polygon points="250,285 245,295 255,295" fill="#757575"/>
+        <line x1="250" y1="285" x2="250" y2="310" stroke="#757575" stroke-width="1.5"/>
+
+        <!-- Infraestrutura -->
+        <rect x="60" y="315" width="380" height="55" rx="8" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="2"/>
+        <text x="250" y="340" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#6a1b9a">Infraestrutura</text>
+        <text x="250" y="358" text-anchor="middle" font-family="Arial" font-size="11" fill="#555">BD, APIs externas, Frameworks</text>
+
+        <!-- Legenda direção -->
+        <text x="470" y="200" text-anchor="middle" font-family="Arial" font-size="10" fill="#757575" font-style="italic" transform="rotate(90 470 200)">Dependência → para dentro</text>
+      </svg>
+      <p class="diagrama-legenda">As dependências sempre apontam para dentro, em direção ao domínio</p>
+    </div>
+  </section>
+
+  <!-- ============ CAPÍTULO 8 ============ -->
+  <section id="cap8">
+    <h2 class="capitulo">8. Efeitos Colaterais e Desafios da Adoção</h2>
+
+    <p>A Separação das Responsabilidades, como todo princípio de design, não é uma bala de prata. Sua aplicação inadequada ou excessiva pode trazer efeitos colaterais negativos.</p>
+
+    <h3>8.1 Over-Engineering (Superengenharia)</h3>
+    <p>O excesso de separação pode levar à superengenharia. Quando um sistema é dividido em módulos excessivamente granulares, o custo de gerenciar essas múltiplas unidades pode superar os benefícios.</p>
+
+    <div class="caixa-destaque caixa-alerta">
+      <div class="titulo">Alerta: Over-Engineering</div>
+      <p>Um sistema com 50 classes para implementar um CRUD simples é tão problemático quanto um sistema com uma única classe gigante. O equilíbrio é essencial: separe responsabilidades <strong>quando houver benefício claro</strong> em termos de manutenibilidade, testabilidade ou evolução.</p>
+    </div>
+
+    <h3>8.2 Performance e Overhead de Comunicação</h3>
+    <p>Em sistemas distribuídos, a separação em serviços independentes introduz overhead de comunicação de rede. Cada chamada entre serviços adiciona latência.</p>
+
+    <h3>8.3 Dificuldade em Definir Fronteiras</h3>
+    <p>Um dos maiores desafios práticos do SoC é determinar onde traçar as fronteiras entre as responsabilidades. Fronteiras mal definidas podem levar a acoplamento oculto.</p>
+
+    <h3>8.4 Complexidade de Gerenciamento</h3>
+    <p>Embora o SoC reduza a complexidade interna de cada módulo, ele aumenta a complexidade de gerenciamento do sistema como um todo.</p>
+
+    <h3>8.5 Tabela: Benefícios vs. Desafios</h3>
+
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr><th>Aspecto</th><th>Benefício</th><th>Desafio</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Manutenibilidade</strong></td><td>Mudanças localizadas e de menor risco</td><td>Excesso de módulos pode dificultar a visão global</td></tr>
+          <tr><td><strong>Testabilidade</strong></td><td>Testes unitários isolados e mais simples</td><td>Testes de integração tornam-se mais complexos</td></tr>
+          <tr><td><strong>Reuso</strong></td><td>Componentes reutilizáveis</td><td>Reuso excessivo pode criar acoplamento oculto</td></tr>
+          <tr><td><strong>Evolução</strong></td><td>Componentes evoluem independentemente</td><td>Coordenação de versões e compatibilidade</td></tr>
+          <tr><td><strong>Performance</strong></td><td>Otimização focada em componentes específicos</td><td>Overhead de comunicação entre módulos/serviços</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ CAPÍTULO 9 ============ -->
+  <section id="cap9">
+    <h2 class="capitulo">9. Exemplos de Código: Antes e Depois</h2>
+
+    <p>Neste capítulo, apresentamos exemplos concretos de refatoração para aplicar a Separação das Responsabilidades. Cada exemplo mostra um código "antes" (violando o princípio) e um código "depois" (aplicando o princípio).</p>
+
+    <h3>9.1 Exemplo 1: Processamento de Pedido</h3>
+
+    <p class="codigo-label antes">❌ Código ANTES (violação do SoC)</p>
+    <pre><code><span class="com">// ANTI-PATTERN: Múltiplas responsabilidades em uma única função</span>
+<span class="kw">class</span> <span class="typ">OrderProcessor</span> {
+  <span class="kw">async</span> <span class="fn">processOrder</span>(orderData, request) {
+    <span class="com">// Responsabilidade 1: Parsing de requisição HTTP</span>
+    <span class="kw">const</span> authHeader = request.headers.<span class="fn">get</span>(<span class="str">'Authorization'</span>);
+    <span class="kw">if</span> (!authHeader || !authHeader.<span class="fn">startsWith</span>(<span class="str">'Bearer '</span>)) {
+      <span class="kw">return</span> <span class="kw">new</span> <span class="typ">Response</span>(<span class="fn">JSON.stringify</span>({ error: <span class="str">'Unauthorized'</span> }), { status: <span class="num">401</span> });
+    }
+    <span class="kw">const</span> token = authHeader.<span class="fn">slice</span>(<span class="num">7</span>);
+
+    <span class="com">// Responsabilidade 2: Autenticação</span>
+    <span class="kw">let</span> userId;
+    <span class="kw">try</span> {
+      <span class="kw">const</span> decoded = jwt.<span class="fn">verify</span>(token, process.env.<span class="typ">JWT_SECRET</span>);
+      userId = decoded.userId;
+    } <span class="kw">catch</span> {
+      <span class="kw">return</span> <span class="kw">new</span> <span class="typ">Response</span>(<span class="fn">JSON.stringify</span>({ error: <span class="str">'Invalid token'</span> }), { status: <span class="num">401</span> });
+    }
+
+    <span class="com">// Responsabilidade 3: Validação</span>
+    <span class="kw">if</span> (!orderData.items || orderData.items.length === <span class="num">0</span>) {
+      <span class="kw">return</span> <span class="kw">new</span> <span class="typ">Response</span>(<span class="fn">JSON.stringify</span>({ error: <span class="str">'Order must have items'</span> }), { status: <span class="num">400</span> });
+    }
+
+    <span class="com">// Responsabilidade 4: Acesso a banco de dados</span>
+    <span class="kw">const</span> connection = <span class="kw">await</span> mysql.<span class="fn">createConnection</span>(process.env.<span class="typ">DATABASE_URL</span>);
+
+    <span class="com">// Responsabilidade 5: Lógica de negócio (estoque)</span>
+    <span class="kw">for</span> (<span class="kw">const</span> item <span class="kw">of</span> orderData.items) {
+      <span class="kw">const</span> [rows] = <span class="kw">await</span> connection.<span class="fn">execute</span>(
+        <span class="str">'SELECT stock FROM products WHERE id = ?'</span>, [item.productId]
+      );
+      <span class="kw">if</span> (rows[<span class="num">0</span>].stock &lt; item.quantity) {
+        <span class="kw">return</span> <span class="kw">new</span> <span class="typ">Response</span>(<span class="fn">JSON.stringify</span>({ error: <span class="str">'Insufficient stock'</span> }), { status: <span class="num">400</span> });
+      }
+    }
+
+    <span class="com">// Responsabilidade 6: Lógica de negócio (precificação)</span>
+    <span class="kw">let</span> total = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">const</span> item <span class="kw">of</span> orderData.items) {
+      <span class="kw">const</span> [rows] = <span class="kw">await</span> connection.<span class="fn">execute</span>(
+        <span class="str">'SELECT price FROM products WHERE id = ?'</span>, [item.productId]
+      );
+      total += rows[<span class="num">0</span>].price * item.quantity;
+    }
+
+    <span class="com">// Responsabilidade 7: Processamento de pagamento</span>
+    <span class="kw">const</span> stripe = <span class="kw">new</span> <span class="typ">Stripe</span>(process.env.<span class="typ">STRIPE_KEY</span>);
+    <span class="kw">const</span> paymentIntent = <span class="kw">await</span> stripe.paymentIntents.<span class="fn">create</span>({
+      amount: <span class="fn">Math.round</span>(total * <span class="num">100</span>), currency: <span class="str">'usd'</span>, customer: userId
+    });
+
+    <span class="com">// Responsabilidade 8: Notificação</span>
+    <span class="kw">const</span> transporter = nodemailer.<span class="fn">createTransport</span>({ <span class="com">/* SMTP */</span> });
+    <span class="kw">await</span> transporter.<span class="fn">sendMail</span>({
+      to: orderData.email, subject: <span class="str">'Order Confirmation'</span>,
+      html: <span class="str">`&lt;h1&gt;Order confirmed&lt;/h1&gt;&lt;p&gt;Total: $</span>{total}<span class="str">&lt;/p&gt;`</span>
+    });
+
+    <span class="com">// Responsabilidade 9: Logging</span>
+    console.<span class="fn">log</span>(<span class="str">`Order created for user </span>{userId}<span class="str">, total: $</span>{total}<span class="str">`</span>);
+  }
+}</code></pre>
+
+    <p class="codigo-label depois">✅ Código DEPOIS (aplicando SoC)</p>
+    <pre><code><span class="com">// APLICAÇÃO DO SoC: Responsabilidades separadas</span>
+
+<span class="com">// Módulo 1: Autenticação</span>
+<span class="kw">class</span> <span class="typ">AuthService</span> {
+  <span class="fn">authenticate</span>(request) {
+    <span class="kw">const</span> authHeader = request.headers.<span class="fn">get</span>(<span class="str">'Authorization'</span>);
+    <span class="kw">if</span> (!authHeader?.<span class="fn">startsWith</span>(<span class="str">'Bearer '</span>)) <span class="kw">throw new</span> <span class="typ">AuthError</span>(<span class="str">'Unauthorized'</span>);
+    <span class="kw">const</span> token = authHeader.<span class="fn">slice</span>(<span class="num">7</span>);
+    <span class="kw">try</span> {
+      <span class="kw">return</span> jwt.<span class="fn">verify</span>(token, process.env.<span class="typ">JWT_SECRET</span>).userId;
+    } <span class="kw">catch</span> {
+      <span class="kw">throw new</span> <span class="typ">AuthError</span>(<span class="str">'Invalid token'</span>);
+    }
+  }
+}
+
+<span class="com">// Módulo 2: Validação</span>
+<span class="kw">class</span> <span class="typ">OrderValidator</span> {
+  <span class="fn">validate</span>(orderData) {
+    <span class="kw">if</span> (!orderData.items?.length) <span class="kw">throw new</span> <span class="typ">ValidationError</span>(<span class="str">'Order must have items'</span>);
+    <span class="kw">for</span> (<span class="kw">const</span> item <span class="kw">of</span> orderData.items) {
+      <span class="kw">if</span> (!item.productId || item.quantity &lt; <span class="num">1</span>)
+        <span class="kw">throw new</span> <span class="typ">ValidationError</span>(<span class="str">'Invalid item'</span>);
+    }
+  }
+}
+
+<span class="com">// Módulo 3: Repositório de Produtos</span>
+<span class="kw">class</span> <span class="typ">ProductRepository</span> {
+  <span class="fn">constructor</span>(connection) { <span class="kw">this</span>.connection = connection; }
+
+  <span class="kw">async</span> <span class="fn">getStock</span>(productId) {
+    <span class="kw">const</span> [rows] = <span class="kw">await this</span>.connection.<span class="fn">execute</span>(
+      <span class="str">'SELECT stock FROM products WHERE id = ?'</span>, [productId]
+    );
+    <span class="kw">return</span> rows[<span class="num">0</span>]?.stock ?? <span class="num">0</span>;
+  }
+
+  <span class="kw">async</span> <span class="fn">getPrice</span>(productId) {
+    <span class="kw">const</span> [rows] = <span class="kw">await this</span>.connection.<span class="fn">execute</span>(
+      <span class="str">'SELECT price FROM products WHERE id = ?'</span>, [productId]
+    );
+    <span class="kw">return</span> rows[<span class="num">0</span>]?.price ?? <span class="num">0</span>;
+  }
+}
+
+<span class="com">// Módulo 4: Serviço de Inventário</span>
+<span class="kw">class</span> <span class="typ">InventoryService</span> {
+  <span class="fn">constructor</span>(productRepo) { <span class="kw">this</span>.productRepo = productRepo; }
+
+  <span class="kw">async</span> <span class="fn">checkAvailability</span>(items) {
+    <span class="kw">for</span> (<span class="kw">const</span> item <span class="kw">of</span> items) {
+      <span class="kw">const</span> stock = <span class="kw">await this</span>.productRepo.<span class="fn">getStock</span>(item.productId);
+      <span class="kw">if</span> (stock &lt; item.quantity)
+        <span class="kw">throw new</span> <span class="typ">BusinessError</span>(<span class="str">`Insufficient stock for </span>{item.productId}<span class="str">`</span>);
+    }
+  }
+}
+
+<span class="com">// Módulo 5: Serviço de Precificação</span>
+<span class="kw">class</span> <span class="typ">PricingService</span> {
+  <span class="fn">constructor</span>(productRepo) { <span class="kw">this</span>.productRepo = productRepo; }
+
+  <span class="kw">async</span> <span class="fn">calculateTotal</span>(items) {
+    <span class="kw">let</span> total = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">const</span> item <span class="kw">of</span> items) {
+      <span class="kw">const</span> price = <span class="kw">await this</span>.productRepo.<span class="fn">getPrice</span>(item.productId);
+      total += price * item.quantity;
+    }
+    <span class="kw">return</span> total;
+  }
+}
+
+<span class="com">// Módulo 6: Serviço de Pagamento</span>
+<span class="kw">class</span> <span class="typ">PaymentService</span> {
+  <span class="fn">constructor</span>(stripeKey) { <span class="kw">this</span>.stripe = <span class="kw">new</span> <span class="typ">Stripe</span>(stripeKey); }
+
+  <span class="kw">async</span> <span class="fn">processPayment</span>(userId, amount) {
+    <span class="kw">return this</span>.stripe.paymentIntents.<span class="fn">create</span>({
+      amount: <span class="fn">Math.round</span>(amount * <span class="num">100</span>), currency: <span class="str">'usd'</span>, customer: userId
+    });
+  }
+}
+
+<span class="com">// Módulo 7: Serviço de Notificação</span>
+<span class="kw">class</span> <span class="typ">NotificationService</span> {
+  <span class="fn">constructor</span>(transporter) { <span class="kw">this</span>.transporter = transporter; }
+
+  <span class="kw">async</span> <span class="fn">sendOrderConfirmation</span>(email, total) {
+    <span class="kw">await this</span>.transporter.<span class="fn">sendMail</span>({
+      to: email, subject: <span class="str">'Order Confirmation'</span>,
+      html: <span class="str">`&lt;h1&gt;Order confirmed&lt;/h1&gt;&lt;p&gt;Total: $</span>{total}<span class="str">&lt;/p&gt;`</span>
+    });
+  }
+}
+
+<span class="com">// Módulo 8: Orquestrador (apenas coordena os serviços)</span>
+<span class="kw">class</span> <span class="typ">OrderOrchestrator</span> {
+  <span class="fn">constructor</span>(auth, validator, inventory, pricing, payment, notification, logger) {
+    <span class="kw">this</span>.auth = auth;
+    <span class="kw">this</span>.validator = validator;
+    <span class="kw">this</span>.inventory = inventory;
+    <span class="kw">this</span>.pricing = pricing;
+    <span class="kw">this</span>.payment = payment;
+    <span class="kw">this</span>.notification = notification;
+    <span class="kw">this</span>.logger = logger;
+  }
+
+  <span class="kw">async</span> <span class="fn">processOrder</span>(orderData, request) {
+    <span class="kw">const</span> userId = <span class="kw">this</span>.auth.<span class="fn">authenticate</span>(request);
+    <span class="kw">this</span>.validator.<span class="fn">validate</span>(orderData);
+    <span class="kw">await this</span>.inventory.<span class="fn">checkAvailability</span>(orderData.items);
+    <span class="kw">const</span> total = <span class="kw">await this</span>.pricing.<span class="fn">calculateTotal</span>(orderData.items);
+    <span class="kw">await this</span>.payment.<span class="fn">processPayment</span>(userId, total);
+    <span class="kw">await this</span>.notification.<span class="fn">sendOrderConfirmation</span>(orderData.email, total);
+    <span class="kw">this</span>.logger.<span class="fn">log</span>(<span class="str">`Order created for user </span>{userId}<span class="str">, total: $</span>{total}<span class="str">`</span>);
+    <span class="kw">return</span> { userId, total, status: <span class="str">'confirmed'</span> };
+  }
+}</code></pre>
+
+    <div class="caixa-destaque caixa-sucesso">
+      <div class="titulo">Análise das Melhorias</div>
+      <p>
+        ✓ Cada classe tem uma única responsabilidade bem definida (SRP)<br>
+        ✓ Testabilidade: cada serviço pode ser testado isoladamente<br>
+        ✓ Substituibilidade: implementações podem ser trocadas sem afetar o orquestrador<br>
+        ✓ Reuso: serviços podem ser usados em outros fluxos<br>
+        ✓ Legibilidade: o orquestrador expressa claramente o fluxo de alto nível<br>
+        ✓ Manutenibilidade: mudanças afetam apenas o serviço correspondente
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ CAPÍTULO 10 ============ -->
+  <section id="cap10">
+    <h2 class="capitulo">10. Impacto em Arquiteturas de Referência</h2>
+
+    <p>A Separação das Responsabilidades é o princípio fundamental que sustenta praticamente todas as arquiteturas de referência modernas.</p>
+
+    <h3>10.1 Clean Architecture (Arquitetura Limpa)</h3>
+    <p>Proposta por Robert C. Martin, a Clean Architecture é talvez a expressão mais pura do SoC em nível arquitetural. Ela organiza o sistema em camadas concêntricas, onde as camadas mais internas contêm as regras de negócio e são independentes de frameworks, bancos de dados e interfaces de usuário.</p>
+
+    <p>O princípio central é a <strong>Regra da Dependência</strong>: as dependências do código-fonte devem apontar apenas para dentro, em direção às políticas de mais alto nível.</p>
+
+    <p>As camadas típicas são:</p>
+
+    <ul>
+      <li><strong>Entidades:</strong> Objetos de domínio com regras de negócio fundamentais;</li>
+      <li><strong>Casos de Uso:</strong> Orquestram o fluxo de dados de e para as entidades;</li>
+      <li><strong>Adaptadores de Interface:</strong> Convertem dados entre formatos;</li>
+      <li><strong>Frameworks e Drivers:</strong> Camada mais externa com detalhes técnicos.</li>
+    </ul>
+
+    <h3>10.2 Hexagonal Architecture (Ports and Adapters)</h3>
+    <p>Proposta por Alistair Cockburn em 2005, visa isolar o núcleo da aplicação de preocupações externas. O conceito central é o de <strong>portas</strong> (interfaces) e <strong>adaptadores</strong> (implementações).</p>
+
+    <h3>10.3 Model-View-Controller (MVC)</h3>
+    <p>O padrão MVC é uma das aplicações mais antigas e difundidas do SoC. Ele separa a aplicação em três componentes:</p>
+
+    <ul>
+      <li><strong>Model:</strong> Lógica de negócios, dados e persistência;</li>
+      <li><strong>View:</strong> Apresentação visual e interação com o usuário;</li>
+      <li><strong>Controller:</strong> Intermediação entre Model e View.</li>
+    </ul>
+
+    <h3>10.4 Microsserviços</h3>
+    <p>A arquitetura de microsserviços leva o SoC ao nível de serviços independentes. Cada microsserviço é responsável por uma capacidade de negócio específica e pode ser desenvolvido, implantado e escalado independentemente.</p>
+
+    <div class="diagrama">
+      <svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquiteturas de referência">
+        <text x="250" y="25" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#1a237e">Arquiteturas de Referência &amp; SoC</text>
+
+        <!-- Clean -->
+        <circle cx="100" cy="130" r="40" fill="#e3f2fd" stroke="#1a237e" stroke-width="2"/>
+        <circle cx="100" cy="130" r="28" fill="#e8eaf6" stroke="#283593" stroke-width="2"/>
+        <circle cx="100" cy="130" r="16" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+        <text x="100" y="195" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#1a237e">Clean Arch</text>
+
+        <!-- Hexagonal -->
+        <polygon points="250,90 285,110 285,150 250,170 215,150 215,110" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+        <circle cx="250" cy="130" r="12" fill="#c8e6c9" stroke="#2e7d32" stroke-width="1.5"/>
+        <text x="250" y="195" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#2e7d32">Hexagonal</text>
+
+        <!-- MVC -->
+        <rect x="355" y="95" width="35" height="35" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+        <rect x="400" y="95" width="35" height="35" rx="4" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+        <rect x="377" y="140" width="35" height="35" rx="4" fill="#e3f2fd" stroke="#1a237e" stroke-width="1.5"/>
+        <text x="387" y="195" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#e65100">MVC</text>
+
+        <!-- Microservices -->
+        <rect x="30" y="245" width="40" height="40" rx="6" fill="#e3f2fd" stroke="#1a237e" stroke-width="1.5"/>
+        <rect x="85" y="245" width="40" height="40" rx="6" fill="#e8eaf6" stroke="#283593" stroke-width="1.5"/>
+        <rect x="140" y="245" width="40" height="40" rx="6" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+        <rect x="195" y="245" width="40" height="40" rx="6" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+        <rect x="250" y="245" width="40" height="40" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+        <text x="160" y="310" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#6a1b9a">Microsserviços</text>
+
+        <text x="380" y="265" text-anchor="middle" font-family="Arial" font-size="11" font-style="italic" fill="#555">Todas aplicam SoC</text>
+        <text x="380" y="285" text-anchor="middle" font-family="Arial" font-size="11" font-style="italic" fill="#555">em diferentes escalas</text>
+      </svg>
+      <p class="diagrama-legenda">As principais arquiteturas de referência como manifestações do SoC</p>
+    </div>
+  </section>
+
+  <!-- ============ CAPÍTULO 11 ============ -->
+  <section id="cap11">
+    <h2 class="capitulo">11. O Papel do SoC na Era do Desenvolvimento com IA</h2>
+
+    <p>A ascensão da Inteligência Artificial Generativa e dos Grandes Modelos de Linguagem (LLMs) está transformando radicalmente a forma como desenvolvemos software. Nesse novo cenário, a Separação das Responsabilidades não apenas permanece relevante — ela se torna ainda mais crucial.</p>
+
+    <h3>11.1 Por que o SoC é ainda mais importante com IA?</h3>
+    <p>Modelos de IA generativa, como o ChatGPT, Claude e GitHub Copilot, são ferramentas poderosas para gerar código. No entanto, eles tendem a produzir código que viola o SoC quando não são devidamente guiados. Sem instruções claras sobre a arquitetura desejada, a IA pode gerar componentes monolíticos que misturam responsabilidades.</p>
+
+    <p>Além disso, a IA gera código mais seguro e manutenível quando as responsabilidades são estreitas e bem definidas. Componentes menores e coesos são mais fáceis de entender, converter, refatorar e testar — tanto por humanos quanto por agentes de IA.</p>
+
+    <h3>11.2 SoC em Prompts de IA</h3>
+    <p>O princípio do SoC pode ser aplicado diretamente ao design de prompts para LLMs. Em vez de um prompt monolítico que tenta fazer tudo de uma vez, podemos decompor o prompt em partes independentes e reutilizáveis.</p>
+
+    <p>Por exemplo, em vez de um único prompt "Gere um sistema de e-commerce completo", podemos ter prompts separados para: modelagem de dados, API de produtos, API de pedidos, autenticação. Cada prompt produz um componente com responsabilidade única.</p>
+
+    <h3>11.3 SoC em Arquiteturas de Agentes de IA</h3>
+    <p>Sistemas multiagentes de IA também se beneficiam enormemente do SoC. Em vez de um único agente monolítico, podemos ter agentes especializados: um para análise de requisitos, um para design, um para implementação, um para testes, um para revisão de código.</p>
+
+    <h3>11.4 Desafios Específicos da IA</h3>
+
+    <div class="tabela-wrapper">
+      <table>
+        <thead>
+          <tr><th>Desafio</th><th>Como o SoC Ajuda</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Alucinação</strong></td><td>Componentes isolados são mais fáceis de verificar e testar</td></tr>
+          <tr><td><strong>Falta de Contexto</strong></td><td>Componentes menores cabem melhor na janela de contexto</td></tr>
+          <tr><td><strong>Consistência</strong></td><td>Padrões específicos podem ser aplicados por tipo de componente</td></tr>
+          <tr><td><strong>Segurança</strong></td><td>Componentes isolados são mais fáceis de auditar</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>11.5 O Futuro: SoC como Fundamento</h3>
+    <p>À medida que a IA se torna mais integrada ao desenvolvimento de software, a Separação das Responsabilidades deixa de ser apenas um princípio de design para se tornar uma <strong>estratégia de governança</strong>. Definir fronteiras claras de responsabilidade — entre humanos e IA, entre diferentes agentes de IA, e entre diferentes componentes do sistema — é essencial para garantir que o software resultante seja seguro, manutenível e evolutivo.</p>
+  </section>
+
+  <!-- ============ CAPÍTULO 12 ============ -->
+  <section id="cap12">
+    <h2 class="capitulo">12. Estudos de Caso e Aplicações Práticas</h2>
+
+    <h3>12.1 Estudo de Caso 1: Refatoração de um Sistema Legado</h3>
+    <p><strong>Contexto:</strong> Uma empresa de logística mantinha um sistema de gestão de entregas desenvolvido ao longo de 10 anos. O código consistia em algumas poucas classes gigantes, cada uma com milhares de linhas, misturando cálculos de frete, integração com transportadoras, geração de relatórios e interface com o usuário.</p>
+
+    <p><strong>Problema:</strong> Qualquer alteração em uma regra de frete exigia testes manuais extensivos. Novas funcionalidades levavam meses para serem entregues.</p>
+
+    <p><strong>Solução:</strong> A equipe aplicou o SoC para decompor o sistema em módulos especializados: um para cálculo de frete, um para integração com transportadoras, um para geração de relatórios e um para a interface.</p>
+
+    <p><strong>Resultado:</strong> O tempo de entrega de novas funcionalidades caiu de meses para semanas. O número de bugs em produção reduziu-se em 70%.</p>
+
+    <h3>12.2 Estudo de Caso 2: Arquitetura de Microsserviços</h3>
+    <p><strong>Contexto:</strong> Uma startup de e-commerce estava migrando de um monolito para microsserviços.</p>
+
+    <p><strong>Problema:</strong> Escalar o sistema para lidar com picos de tráfego era ineficiente, pois era necessário escalar toda a aplicação.</p>
+
+    <p><strong>Solução:</strong> O sistema foi decomposto em microsserviços, cada um com uma responsabilidade de negócio específica.</p>
+
+    <p><strong>Resultado:</strong> A escalabilidade tornou-se granular. Os times ganharam autonomia. O tempo de deploy caiu de horas para minutos.</p>
+
+    <h3>12.3 Estudo de Caso 3: Desenvolvimento Assistido por IA</h3>
+    <p><strong>Contexto:</strong> Uma equipe adotou o GitHub Copilot para acelerar a codificação.</p>
+
+    <p><strong>Problema:</strong> A IA gerava código monolítico, difícil de testar e manter.</p>
+
+    <p><strong>Solução:</strong> A equipe passou a aplicar explicitamente o SoC nos prompts, pedindo componentes com responsabilidades específicas.</p>
+
+    <p><strong>Resultado:</strong> A qualidade do código gerado pela IA melhorou significativamente. O tempo de revisão de código caiu em 40%.</p>
+  </section>
+
+  <!-- ============ CAPÍTULO 13 ============ -->
+  <section id="cap13">
+    <h2 class="capitulo">13. Conclusão e Perspectivas Futuras</h2>
+
+    <p>A Separação das Responsabilidades é, sem dúvida, um dos princípios mais importantes e duradouros da engenharia de software. Desde sua formulação por Dijkstra em 1974, ela evoluiu de uma heurística cognitiva para um princípio arquitetural fundamental.</p>
+
+    <h3>13.1 Síntese dos Principais Pontos</h3>
+
+    <ul>
+      <li><strong>Definição:</strong> SoC é a decomposição de um sistema em partes distintas, cada uma com uma responsabilidade específica;</li>
+      <li><strong>Problema que resolve:</strong> Complexidade, acoplamento excessivo, baixa coesão, dificuldade de manutenção;</li>
+      <li><strong>Relação com SOLID:</strong> O SRP é a aplicação direta do SoC; os demais princípios dependem dele;</li>
+      <li><strong>Arquiteturas:</strong> Clean, Hexagonal, MVC e Microsserviços são todas manifestações do SoC;</li>
+      <li><strong>Era da IA:</strong> O SoC é crucial no desenvolvimento assistido por IA;</li>
+      <li><strong>Desafios:</strong> Over-engineering, overhead de comunicação, dificuldade de fronteiras.</li>
+    </ul>
+
+    <h3>13.2 Perspectivas Futuras</h3>
+    <p>Olhando para o futuro, a Separação das Responsabilidades continuará evoluindo e se adaptando a novos paradigmas. Com a crescente adoção de IA generativa, computação quântica, edge computing e sistemas autônomos, o SoC se manterá como um princípio norteador essencial para lidar com a complexidade inerente a esses sistemas.</p>
+
+    <p>A integração entre SoC e IA promete avanços significativos: agentes de IA especializados, cada um com uma responsabilidade clara, trabalhando em conjunto para desenvolver, testar e manter software.</p>
+  </section>
+
+  <!-- ============ CAPÍTULO 14 ============ -->
+  <section id="cap14">
+    <h2 class="capitulo">14. Referências Bibliográficas</h2>
+
+    <ol style="font-size: 14px; line-height: 1.7;">
+      <li>Dijkstra, E. W. (1974). <em>On the Role of Scientific Thought</em>. EWD447.</li>
+      <li>Dijkstra, E. W. (1976). <em>A Discipline of Programming</em>. Prentice-Hall.</li>
+      <li>Parnas, D. L. (1972). On the Criteria To Be Used in Decomposing Systems into Modules. <em>Communications of the ACM</em>, 15(12), 1053-1058.</li>
+      <li>Martin, R. C. (2003). <em>Agile Software Development: Principles, Patterns, and Practices</em>. Prentice Hall.</li>
+      <li>Martin, R. C. (2017). <em>Clean Architecture: A Craftsman's Guide to Software Structure and Design</em>. Prentice Hall.</li>
+      <li>Cockburn, A. (2005). <em>Hexagonal Architecture</em>. Alistair Cockburn Blog.</li>
+      <li>Evans, E. (2003). <em>Domain-Driven Design: Tackling Complexity in the Heart of Software</em>. Addison-Wesley.</li>
+      <li>Fowler, M. (2002). <em>Patterns of Enterprise Application Architecture</em>. Addison-Wesley.</li>
+      <li>Kiczales, G. et al. (1997). <em>Aspect-Oriented Programming</em>. ECOOP.</li>
+      <li>Ossher, H., &amp; Tarr, P. (2001). Using Multidimensional Separation of Concerns to (Re)shape Evolving Software. <em>Communications of the ACM</em>, 44(10), 43-50.</li>
+      <li>Hürsch, W. L., &amp; Lopes, C. V. (1995). <em>Separation of Concerns</em>. Northeastern University Technical Report.</li>
+      <li>Gamma, E., Helm, R., Johnson, R., &amp; Vlissides, J. (1994). <em>Design Patterns: Elements of Reusable Object-Oriented Software</em>. Addison-Wesley.</li>
+      <li>Lieberherr, K., &amp; Holland, I. (1989). Assuring Good Style for Object-Oriented Programs. <em>IEEE Software</em>.</li>
+    </ol>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <p><strong>Separação das Responsabilidades (SoC)</strong></p>
+  <p>E-book Didático de Engenharia de Software</p>
+  <p style="margin-top: 12px; opacity: 0.7;">© 2026 — Edição Digital</p>
+</footer>
+
+<!-- ============ BOTÃO TOPO ============ -->
+<button id="topo" aria-label="Voltar ao topo">↑</button>
+
+<script>
+  // ============================================================
+  // MENU MOBILE
+  // ============================================================
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const menuToggle = document.getElementById('menu-toggle');
+
+  function toggleMenu() {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+  }
+
+  menuToggle.addEventListener('click', toggleMenu);
+  overlay.addEventListener('click', toggleMenu);
+
+  // Fechar menu ao clicar em um link
+  document.querySelectorAll('#sidebar a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth < 1024) toggleMenu();
+    });
+  });
+
+  // ============================================================
+  // BOTÃO VOLTAR AO TOPO
+  // ============================================================
+  const topoBtn = document.getElementById('topo');
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 400) {
+      topoBtn.classList.add('visivel');
+    } else {
+      topoBtn.classList.remove('visivel');
+    }
+  });
+
+  topoBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ============================================================
+  // DESTAQUE DO LINK ATIVO NO MENU
+  // ============================================================
+  const sections = document.querySelectorAll('section');
+  const navLinks = document.querySelectorAll('#sidebar a');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop - 100;
+      if (window.scrollY >= sectionTop) {
+        current = section.getAttribute('id');
+      }
+    });
+
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('active');
+      }
+    });
+  });
+
+  // ============================================================
+  // PROGRESSO DE LEITURA (opcional - barra no topo)
+  // ============================================================
+  const progressBar = document.createElement('div');
+  progressBar.style.cssText = `
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, #e65100, #ffb74d);
+    width: 0%; z-index: 1001; transition: width 0.1s ease;
+  `;
+  document.body.appendChild(progressBar);
+
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (scrollTop / docHeight) * 100;
+    progressBar.style.width = progress + '%';
+  });
+</script>
+
+</body>
+</html>
